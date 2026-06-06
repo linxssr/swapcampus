@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ChatMessageMapper">
+    <resultMap id="ChatMessageResultMap" type="com.campus.model.entity.ChatMessage">
+        <id property="msgId" column="msg_id" />
+        <result property="fromUid" column="from_uid" />
+        <result property="toUid" column="to_uid" />
+        <result property="content" column="content" />
+        <result property="msgType" column="msg_type" />
+        <result property="imageUrl" column="image_url" />
+        <result property="sendTime" column="send_time" />
+        <result property="isRead" column="is_read" />
+    </resultMap>
+
+    <resultMap id="ChatConversationResultMap" type="com.campus.model.vo.ChatConversationVO">
+        <result property="peerUid" column="peer_uid" />
+        <result property="peerName" column="peer_name" />
+        <result property="peerAvatar" column="peer_avatar" />
+        <result property="lastMsgId" column="last_msg_id" />
+        <result property="lastContent" column="last_content" />
+        <result property="lastMsgType" column="last_msg_type" />
+        <result property="lastSendTime" column="last_send_time" />
+        <result property="unreadCount" column="unread_count" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.campus.model.entity.ChatMessage" useGeneratedKeys="true" keyProperty="msgId">
+        INSERT INTO chat_message
+        (from_uid, to_uid, content, msg_type, image_url, send_time, is_read)
+        VALUES
+        (#{fromUid}, #{toUid}, #{content}, #{msgType}, #{imageUrl}, #{sendTime}, #{isRead})
+    </insert>
+
+    <select id="selectHistory" resultMap="ChatMessageResultMap">
+        SELECT msg_id, from_uid, to_uid, content, msg_type, image_url, send_time, is_read
+        FROM chat_message
+        WHERE (from_uid = #{fromUid} AND to_uid = #{toUid})
+           OR (from_uid = #{toUid} AND to_uid = #{fromUid})
+        ORDER BY send_time ASC, msg_id ASC
+    </select>
+
+    <select id="selectConversations" resultMap="ChatConversationResultMap">
+        SELECT
+            latest.peer_uid,
+            COALESCE(u.username, CONCAT('用户', latest.peer_uid)) AS peer_name,
+            u.avatar AS peer_avatar,
+            m.msg_id AS last_msg_id,
+            m.content AS last_content,
+            m.msg_type AS last_msg_type,
+            m.send_time AS last_send_time,
+            COALESCE(unread.unread_count, 0) AS unread_count
+        FROM (
+            SELECT peer_uid, MAX(msg_id) AS last_msg_id
+            FROM (
+                SELECT to_uid AS peer_uid, msg_id FROM chat_message WHERE from_uid = #{uid}
+                UNION ALL
+                SELECT from_uid AS peer_uid, msg_id FROM chat_message WHERE to_uid = #{uid}
+            ) conversation_source
+            GROUP BY peer_uid
+        ) latest
+        INNER JOIN chat_message m ON m.msg_id = latest.last_msg_id
+        LEFT JOIN `user` u ON u.user_id = latest.peer_uid
+        LEFT JOIN (
+            SELECT from_uid AS peer_uid, COUNT(*) AS unread_count
+            FROM chat_message
+            WHERE to_uid = #{uid} AND is_read = 0
+            GROUP BY from_uid
+        ) unread ON unread.peer_uid = latest.peer_uid
+        ORDER BY m.send_time DESC, m.msg_id DESC
+    </select>
+
+    <update id="markRead">
+        UPDATE chat_message
+        SET is_read = 1
+        WHERE from_uid = #{toUid}
+          AND to_uid = #{fromUid}
+          AND is_read = 0
+    </update>
+
+    <update id="markReadByMsgId">
+        UPDATE chat_message
+        SET is_read = 1
+        WHERE msg_id = #{msgId}
+          AND to_uid = #{toUid}
+          AND is_read = 0
+    </update>
+</mapper>

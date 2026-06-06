@@ -1,0 +1,358 @@
+<template>
+  <div class="chat-page">
+    <section class="chat-layout">
+      <aside class="conversation-panel">
+        <div class="panel-header">
+          <h2>消息</h2>
+        </div>
+        <div v-if="conversations.length === 0" class="empty-list">
+          <div class="empty-state">
+            <div class="empty-icon">💬</div>
+            <p>暂无会话</p>
+          </div>
+        </div>
+        <div v-else class="conversation-list">
+          <RouterLink
+            v-for="item in conversations"
+            :key="item.peerUid"
+            class="conversation-item"
+            :class="{ active: Number(route.params.toUid) === item.peerUid }"
+            :to="buildRoomPath(item.peerUid)"
+            @click="clearUnread(item.peerUid)"
+          >
+            <div class="avatar-wrap">
+              <img v-if="item.peerAvatar" :src="item.peerAvatar" alt="" />
+              <span v-else>{{ getAvatarText(item.peerName, item.peerUid) }}</span>
+              <i v-if="item.unreadCount > 0" class="unread-dot"></i>
+            </div>
+            <div class="conv-body">
+              <div class="conv-top">
+                <strong>{{ item.peerName || `用户${item.peerUid}` }}</strong>
+                <time>{{ formatTime(item.lastSendTime) }}</time>
+              </div>
+              <div class="conv-bottom">
+                <span class="preview">{{ getPreview(item) }}</span>
+                <em v-if="item.unreadCount > 0" class="badge">{{ item.unreadCount > 99 ? '99+' : item.unreadCount }}</em>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+      </aside>
+
+      <main class="room-panel">
+        <RouterView v-slot="{ Component }">
+          <component
+            :is="Component"
+            v-if="Component"
+            :key="route.fullPath"
+            @message-change="loadConversations"
+          />
+          <div v-else class="room-empty">
+            <div class="empty-card">
+              <div class="empty-icon-big">💬</div>
+              <h3>选择联系人开始聊天</h3>
+              <p>从左侧会话列表选择，或从商品详情页发起聊天</p>
+            </div>
+          </div>
+        </RouterView>
+      </main>
+    </section>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { getChatConversations } from '@/api/modules/chat';
+import type { ChatConversationVO } from '@/types/chat';
+
+const route = useRoute();
+const router = useRouter();
+const currentUid = ref(String(route.query.uid || localStorage.getItem('swapcampus_dev_uid') || '1'));
+const conversations = ref<ChatConversationVO[]>([]);
+
+onMounted(() => {
+  localStorage.setItem('swapcampus_dev_uid', currentUid.value);
+  loadConversations();
+  handleQueryRedirect();
+});
+
+watch(() => route.query.uid, (uid) => {
+  const nextUid = String(uid || localStorage.getItem('swapcampus_dev_uid') || '1');
+  if (nextUid !== currentUid.value) {
+    currentUid.value = nextUid;
+    localStorage.setItem('swapcampus_dev_uid', nextUid);
+    loadConversations();
+  }
+});
+
+function handleQueryRedirect() {
+  const toUid = route.query.toUid;
+  if (toUid && !route.params.toUid) {
+    router.replace({
+      path: `/chat/room/${toUid}`,
+      query: { uid: currentUid.value, itemId: route.query.itemId as string },
+    });
+  }
+}
+
+async function loadConversations() {
+  try {
+    const result = await getChatConversations(currentUid.value);
+    conversations.value = result.data || [];
+  } catch {
+    conversations.value = [];
+  }
+}
+
+function buildRoomPath(peerUid: number) {
+  return {
+    path: `/chat/room/${peerUid}`,
+    query: { uid: currentUid.value, itemId: route.query.itemId },
+  };
+}
+
+function clearUnread(peerUid: number) {
+  const item = conversations.value.find((c) => c.peerUid === peerUid);
+  if (item) item.unreadCount = 0;
+}
+
+function getPreview(item: ChatConversationVO) {
+  if (item.lastMsgType === 2) return '[图片]';
+  if (item.lastMsgType === 3) return '[表情]';
+  return item.lastContent || '';
+}
+
+function getAvatarText(name: string | undefined, uid: number) {
+  return name?.slice(0, 1) || String(uid).slice(-1);
+}
+
+function formatTime(value: string) {
+  if (!value) return '';
+  const d = new Date(value);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  return `${d.getMonth() + 1}-${d.getDate()}`;
+}
+</script>
+
+<style scoped>
+.chat-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+.chat-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: calc(100vh - 120px);
+  min-height: 600px;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+}
+
+.conversation-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 0 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.empty-list {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state {
+  text-align: center;
+  color: #bbb;
+}
+
+.empty-state .empty-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+  border-bottom: 1px solid #fafafa;
+}
+
+.conversation-item:hover {
+  background: #f8f9fa;
+}
+
+.conversation-item.active {
+  background: #eef6ff;
+}
+
+.avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0095ff, #33b6ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  overflow: hidden;
+}
+
+.avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: #ff3b30;
+  border: 2px solid #fff;
+  border-radius: 50%;
+}
+
+.conv-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.conv-top strong {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-top time {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #bbb;
+  margin-left: 8px;
+}
+
+.conv-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.conv-bottom .preview {
+  flex: 1;
+  font-size: 13px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-bottom .badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-style: normal;
+  color: #fff;
+  background: #ff3b30;
+  border-radius: 9px;
+}
+
+.room-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.room-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfc;
+}
+
+.empty-card {
+  text-align: center;
+}
+
+.empty-icon-big {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.empty-card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.empty-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+</style>
