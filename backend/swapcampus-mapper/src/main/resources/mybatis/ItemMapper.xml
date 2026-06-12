@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.campus.mapper.ItemMapper">
+    <select id="filterItems" resultType="com.campus.model.entity.Item">
+        SELECT * FROM item
+        WHERE audit_status = 1 AND publish_status = 1
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="minPrice != null">
+            AND price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND price &lt;= #{maxPrice}
+        </if>
+        <if test="quality != null">
+            AND quality = #{quality}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+</mapper>

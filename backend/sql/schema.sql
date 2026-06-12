@@ -132,6 +132,7 @@ CREATE TABLE `report` (
     handle_admin_id bigint NULL COMMENT '处理管理员ID',
     handle_result varchar(200) NULL COMMENT '处理结果',
     create_time datetime NOT NULL COMMENT '举报时间',
+    update_time datetime NULL COMMENT '更新时间/处理时间',
     CONSTRAINT fk_report_user FOREIGN KEY (report_user) REFERENCES `user`(user_id),
     CONSTRAINT fk_report_item FOREIGN KEY (item_id) REFERENCES `item`(item_id),
     CONSTRAINT fk_report_admin FOREIGN KEY (handle_admin_id) REFERENCES `admin`(admin_id)

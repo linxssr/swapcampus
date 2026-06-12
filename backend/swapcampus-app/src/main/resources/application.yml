@@ -6,8 +6,8 @@ spring:
     name: swapcampus
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/swapcampus_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${MYSQL_USERNAME:root}
+    url: ${MYSQL_URL:jdbc:mysql://121.41.92.121:3306/swapcampus_db?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${MYSQL_USERNAME:group_user}
     password: ${MYSQL_PASSWORD:12345678}
   servlet:
     multipart:
