@@ -5,84 +5,115 @@
       :description="isEdit ? '修改商品信息后需重新审核' : '填写商品信息，审核通过后即可上架'"
     />
 
-    <div class="publish-form-wrapper">
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-        class="publish-form"
-      >
-        <el-form-item label="商品标题" prop="title">
-          <el-input
-            v-model="form.title"
-            placeholder="简洁明确的标题更容易卖出哦"
-            maxlength="100"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="商品分类" prop="categoryId">
-          <el-select v-model="form.categoryId" placeholder="请选择商品分类" class="full-width">
-            <el-option
-              v-for="cat in categoryList"
-              :key="cat.categoryId"
-              :label="cat.categoryName"
-              :value="cat.categoryId"
+    <div class="publish-layout">
+      <!-- 左栏：主要信息 -->
+      <div class="publish-main">
+        <el-form
+          ref="formRef"
+          :model="form"
+          :rules="rules"
+          label-position="top"
+          class="publish-form"
+        >
+          <el-form-item label="商品标题" prop="title">
+            <el-input
+              v-model="form.title"
+              placeholder="简洁明确的标题更容易卖出哦"
+              maxlength="100"
+              show-word-limit
+              size="large"
             />
-          </el-select>
-        </el-form-item>
+          </el-form-item>
 
-        <el-form-item label="价格" prop="price">
-          <el-input-number
-            v-model="form.price"
-            :min="0.01"
-            :precision="2"
-            :controls="false"
-            placeholder="设置一个合理的价格"
-            class="price-input"
-          />
-          <span class="price-unit">元</span>
-        </el-form-item>
+          <div class="form-row">
+            <el-form-item label="商品分类" prop="categoryId" class="form-col">
+              <el-select v-model="form.categoryId" placeholder="请选择商品分类" class="full-width" size="large">
+                <el-option
+                  v-for="cat in categoryList"
+                  :key="cat.categoryId"
+                  :label="cat.categoryName"
+                  :value="cat.categoryId"
+                />
+              </el-select>
+            </el-form-item>
 
-        <el-form-item label="商品成色" prop="quality">
-          <el-radio-group v-model="form.quality" class="quality-group">
-            <el-radio :value="1">全新</el-radio>
-            <el-radio :value="2">几乎全新</el-radio>
-            <el-radio :value="3">轻微使用痕迹</el-radio>
-            <el-radio :value="4">明显使用痕迹</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
-        <el-form-item label="商品描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            :rows="5"
-            placeholder="详细描述商品信息：品牌型号、入手渠道、使用感受、转手原因等"
-            maxlength="2000"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="商品图片" prop="imageUrls">
-          <ImageUploader v-model="form.imageUrls" />
-        </el-form-item>
-
-        <el-form-item>
-          <div class="form-actions">
-            <el-button @click="handleCancel">取消</el-button>
-            <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-              {{ isEdit ? '保存修改' : '提交发布' }}
-            </el-button>
+            <el-form-item label="价格（元）" prop="price" class="form-col">
+              <el-input-number
+                v-model="form.price"
+                :min="0.01"
+                :precision="2"
+                :controls="false"
+                placeholder="请输入价格"
+                class="full-width"
+                size="large"
+              />
+            </el-form-item>
           </div>
+
+          <el-form-item label="商品成色" prop="quality">
+            <el-radio-group v-model="form.quality" class="quality-group">
+              <el-radio :value="1" class="quality-radio">
+                <span class="quality-name">全新</span>
+                <span class="quality-desc">未使用，全新状态</span>
+              </el-radio>
+              <el-radio :value="2" class="quality-radio">
+                <span class="quality-name">几乎全新</span>
+                <span class="quality-desc">轻微使用，无明显痕迹</span>
+              </el-radio>
+              <el-radio :value="3" class="quality-radio">
+                <span class="quality-name">轻微使用痕迹</span>
+                <span class="quality-desc">正常使用，有少量痕迹</span>
+              </el-radio>
+              <el-radio :value="4" class="quality-radio">
+                <span class="quality-name">明显使用痕迹</span>
+                <span class="quality-desc">较多使用，功能完好</span>
+              </el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="商品描述" prop="description">
+            <el-input
+              v-model="form.description"
+              type="textarea"
+              :rows="6"
+              placeholder="详细描述商品信息：品牌型号、入手渠道、使用感受、转手原因等，描述越详细越容易成交"
+              maxlength="2000"
+              show-word-limit
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- 右栏：图片上传 + 提交 -->
+      <div class="publish-side">
+        <div class="side-card">
+          <div class="side-card-title">商品图片</div>
+          <el-form ref="imgFormRef" :model="form" :rules="rules">
+            <el-form-item prop="imageUrls">
+              <ImageUploader v-model="form.imageUrls" />
+            </el-form-item>
+          </el-form>
+          <p class="img-tip">首张图片将作为封面，最多上传 9 张</p>
+        </div>
+
+        <div class="side-card submit-card">
+          <el-button
+            type="primary"
+            size="large"
+            class="submit-btn"
+            :loading="submitLoading"
+            @click="handleSubmit"
+          >
+            {{ isEdit ? '保存修改' : '提交发布' }}
+          </el-button>
+          <el-button size="large" class="submit-btn" @click="handleCancel">取消</el-button>
           <div class="submit-tip">
             <el-icon><InfoFilled /></el-icon>
-            <span v-if="isEdit">保存后商品将重新进入审核状态，请等待管理员审核通过</span>
-            <span v-else>发布后商品将进入审核状态，审核通过后即可在列表中展示</span>
+            <span v-if="isEdit">保存后商品将重新进入审核状态</span>
+            <span v-else>发布后进入审核状态，审核通过后上架</span>
           </div>
-        </el-form-item>
-      </el-form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -102,6 +133,7 @@ import type { CategoryVO, ItemPublishDTO } from '@/types/item';
 const route = useRoute();
 const router = useRouter();
 const formRef = ref<FormInstance>();
+const imgFormRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const categoryList = ref<CategoryVO[]>([]);
 
@@ -177,8 +209,11 @@ async function loadItemForEdit(itemId: string) {
 }
 
 async function handleSubmit() {
-  const valid = await formRef.value?.validate().catch(() => false);
-  if (!valid) return;
+  const [mainValid, imgValid] = await Promise.all([
+    formRef.value?.validate().catch(() => false),
+    imgFormRef.value?.validate().catch(() => false),
+  ]);
+  if (!mainValid || !imgValid) return;
 
   if (!form.imageUrls?.length) {
     ElMessage.warning('请至少上传一张商品图片');
@@ -232,69 +267,152 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.publish-form-wrapper {
+.publish-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.publish-main {
   background: #fff;
-  border-radius: 12px;
-  padding: 32px;
-  max-width: 720px;
+  border-radius: 16px;
+  padding: 32px 36px;
 }
 
 .publish-form {
-  max-width: 600px;
+  width: 100%;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-col {
+  width: 100%;
 }
 
 .full-width {
   width: 100%;
 }
 
-.price-input {
-  width: 200px;
-}
-
-.price-unit {
-  margin-left: 8px;
-  color: #6b7280;
-  font-size: 14px;
-}
-
 .quality-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
 }
 
-.quality-option {
+.quality-radio {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  height: auto;
+}
+
+.quality-radio:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+:deep(.quality-radio.el-radio.is-checked) {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+:deep(.quality-radio .el-radio__label) {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding-left: 8px;
 }
 
 .quality-name {
+  font-size: 14px;
   font-weight: 600;
   color: #1f2937;
+  line-height: 1.4;
 }
 
 .quality-desc {
   font-size: 12px;
   color: #9ca3af;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
-.form-actions {
+.publish-side {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 84px;
+}
+
+.side-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.side-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.img-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.submit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submit-btn {
+  width: 100%;
 }
 
 .submit-tip {
-  margin-top: 12px;
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   color: #9ca3af;
   line-height: 1.5;
+  padding-top: 4px;
 }
 
 .submit-tip .el-icon {
-  margin-top: 2px;
+  margin-top: 1px;
   flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .publish-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .publish-side {
+    position: static;
+  }
+
+  .quality-group {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

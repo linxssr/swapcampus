@@ -2,6 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
 import { ElMessage } from 'element-plus';
 import { StorageKey } from '@/constants/storage';
 import type { ApiResult } from '@/types/api';
+import { toProxiedUrl } from '@/utils/upload';
 
 const request = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -22,8 +23,34 @@ request.interceptors.request.use((config) => {
   return config;
 });
 
+const IMAGE_URL_KEYS = ['coverUrl', 'imageUrls', 'avatar', 'peerAvatar', 'sellerAvatar'];
+
+function rewriteImageUrls(obj: unknown): void {
+  if (!obj || typeof obj !== 'object') return;
+  if (Array.isArray(obj)) {
+    obj.forEach(rewriteImageUrls);
+    return;
+  }
+  const record = obj as Record<string, unknown>;
+  for (const key of Object.keys(record)) {
+    const val = record[key];
+    if (IMAGE_URL_KEYS.includes(key)) {
+      if (typeof val === 'string') {
+        record[key] = toProxiedUrl(val);
+      } else if (Array.isArray(val)) {
+        record[key] = val.map((u) => (typeof u === 'string' ? toProxiedUrl(u) : u));
+      }
+    } else if (val && typeof val === 'object') {
+      rewriteImageUrls(val);
+    }
+  }
+}
+
 request.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    rewriteImageUrls(response.data);
+    return response.data;
+  },
   (error) => {
     ElMessage.error(error?.response?.data?.msg || error.message || '请求失败');
     return Promise.reject(error);

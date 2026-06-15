@@ -71,18 +71,17 @@ const handleLogout = () => {
 <style scoped>
 .admin-layout {
   min-height: 100vh;
-  background: #f5f7fa;
+  background: #f0ede6;
 }
 
-/* 顶部导航 */
 .admin-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 56px;
   padding: 0 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-text);
+  border-bottom: 2px solid #1a1c2e;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -91,97 +90,114 @@ const handleLogout = () => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .menu-toggle {
   background: none;
-  border: none;
-  font-size: 20px;
+  border: 2px solid #3d4165;
+  border-radius: 2px;
+  font-size: 16px;
   cursor: pointer;
-  color: #6b7280;
+  color: #9ca3af;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.menu-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .brand {
-  font-size: 20px;
-  font-weight: 700;
-  color: #2563eb;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-primary);
   text-decoration: none;
+  letter-spacing: 0.5px;
 }
 
 .admin-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .admin-name {
-  font-size: 14px;
-  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9ca3af;
 }
 
 .logout-btn {
-  padding: 6px 16px;
-  background: #fee2e2;
-  color: #dc2626;
-  border: none;
-  border-radius: 8px;
+  padding: 5px 14px;
+  background: transparent;
+  color: var(--color-danger);
+  border: 2px solid var(--color-danger);
+  border-radius: 2px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 #7a3025;
+  transition: box-shadow 0.1s, transform 0.1s;
 }
 
-/* 侧边栏 */
-.admin-body {
-  display: flex;
+.logout-btn:hover {
+  box-shadow: 1px 1px 0 #7a3025;
+  transform: translate(1px, 1px);
 }
+
+.admin-body { display: flex; }
 
 .sidebar {
-  width: 240px;
-  background: white;
-  border-right: 1px solid #e5e7eb;
-  transition: width 0.3s;
-  min-height: calc(100vh - 64px);
+  width: 220px;
+  background: var(--color-surface);
+  border-right: var(--border-pixel);
+  transition: width 0.2s;
+  min-height: calc(100vh - 56px);
+  flex-shrink: 0;
 }
 
-.sidebar.collapsed {
-  width: 70px;
-}
+.sidebar.collapsed { width: 60px; }
 
-.sidebar-nav {
-  padding: 20px 0;
-}
+.sidebar-nav { padding: 16px 0; }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  color: #4b5563;
+  gap: 10px;
+  padding: 10px 18px;
+  color: var(--color-text-sub);
   text-decoration: none;
-  transition: all 0.3s;
+  font-size: 14px;
+  font-weight: 600;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
 }
 
 .nav-item:hover {
-  background: #f3f4f6;
-  color: #2563eb;
+  background: #f0ede6;
+  color: var(--color-text);
 }
 
 .nav-item.router-link-active {
-  background: #eff6ff;
-  color: #2563eb;
-  border-right: 3px solid #2563eb;
+  background: #f0ede6;
+  color: var(--color-text);
+  border-left-color: var(--color-primary);
+  font-weight: 800;
 }
 
-.nav-icon {
-  font-size: 20px;
-}
+.nav-icon { font-size: 18px; flex-shrink: 0; }
 
-.sidebar.collapsed .nav-text {
-  display: none;
-}
+.sidebar.collapsed .nav-text { display: none; }
 
-/* 主内容 */
 .admin-main {
   flex: 1;
   padding: 24px;
+  min-width: 0;
 }
 </style>

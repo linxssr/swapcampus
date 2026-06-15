@@ -13,7 +13,11 @@
         <template v-if="authStore.isLoggedIn">
           <el-dropdown @command="handleUserCommand">
             <div class="user-avatar">
-              <el-avatar :size="32" icon="UserFilled" />
+              <el-avatar
+                :size="32"
+                :src="authStore.userInfo?.avatar || ''"
+                :icon="!authStore.userInfo?.avatar ? 'UserFilled' : undefined"
+              />
               <span class="username">{{ username }}</span>
             </div>
             <template #dropdown>
@@ -58,46 +62,67 @@ function handleUserCommand(cmd: string) {
 <style scoped>
 .user-layout {
   min-height: 100vh;
-  background: #f5f7fb;
+  background: var(--color-bg);
 }
 
 .user-header {
   display: flex;
   align-items: center;
-  height: 64px;
+  height: 60px;
   padding: 0 40px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border-bottom: var(--border-pixel);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 0 var(--color-border);
 }
 
 .brand {
-  font-size: 22px;
-  font-weight: 700;
-  color: #2563eb;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
   margin-right: 40px;
   text-decoration: none;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand::before {
+  content: '⚔';
+  font-size: 18px;
 }
 
 .nav {
   display: flex;
-  gap: 24px;
+  gap: 4px;
   flex: 1;
 }
 
 .nav a {
-  font-size: 15px;
-  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-sub);
   text-decoration: none;
-  transition: color 0.2s;
+  padding: 6px 14px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pixel);
+  transition: all 0.1s;
 }
 
-.nav a:hover,
+.nav a:hover {
+  color: var(--color-text);
+  background: #f0ede6;
+  border-color: var(--color-border);
+}
+
 .nav a.router-link-active {
-  color: #2563eb;
-  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-primary);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .header-actions {
@@ -111,17 +136,22 @@ function handleUserCommand(cmd: string) {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
-  transition: background 0.15s;
+  padding: 5px 12px;
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard-sm);
+  transition: box-shadow 0.1s, transform 0.1s;
 }
 
 .user-avatar:hover {
-  background: #f3f4f6;
+  box-shadow: 1px 1px 0 var(--color-border);
+  transform: translate(1px, 1px);
 }
 
 .username {
   font-size: 14px;
-  color: #374151;
+  font-weight: 600;
+  color: var(--color-text);
 }
 </style>

@@ -5,7 +5,12 @@
     <div class="profile-layout">
       <div class="user-card">
         <div class="user-info">
-          <el-avatar :size="72" class="avatar" icon="UserFilled" />
+          <el-avatar
+            :size="72"
+            :src="userInfo.avatar || ''"
+            :icon="!userInfo.avatar ? 'UserFilled' : undefined"
+            class="avatar"
+          />
           <div class="user-details">
             <div class="username">{{ userInfo.username }}</div>
             <div class="user-meta">
@@ -313,13 +318,15 @@ onMounted(async () => {
 .profile-layout {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .user-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
+  padding: 24px 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -333,16 +340,17 @@ onMounted(async () => {
 
 .username {
   font-size: 22px;
-  font-weight: 700;
-  color: #1f2937;
+  font-weight: 800;
+  color: var(--color-text);
 }
 
 .user-meta {
   display: flex;
   gap: 16px;
   margin-top: 6px;
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
 .credit-row {
@@ -353,91 +361,93 @@ onMounted(async () => {
 }
 
 .credit-label {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
 .credit-score {
-  font-size: 16px;
-  font-weight: 700;
-  color: #f59e0b;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text);
+  background: var(--color-secondary);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pixel);
+  padding: 1px 8px;
 }
 
 .content-tabs {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
   padding: 20px;
 }
 
 .loading,
-.empty-state {
-  padding: 24px 0;
-}
+.empty-state { padding: 24px 0; }
 
-.settings-section {
-  padding: 24px 0;
-}
+.settings-section { padding: 24px 0; }
 
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .item-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard-sm);
   overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: box-shadow 0.1s, transform 0.1s;
 }
 
 .item-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 1px 1px 0 var(--color-border);
+  transform: translate(1px, 1px);
 }
 
 .item-cover {
   width: 100%;
-  height: 180px;
+  height: 170px;
   display: block;
-  background: #f3f4f6;
+  background: #f0ede6;
+  border-bottom: var(--border-pixel);
 }
 
-.item-info {
-  padding: 12px;
-}
+.item-info { padding: 10px 12px; }
 
 .item-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .item-price {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ef4444;
-  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-danger);
+  margin-top: 5px;
 }
 
-.item-meta {
-  margin-top: 6px;
-}
+.item-meta { margin-top: 5px; }
 
 .item-category {
-  font-size: 12px;
-  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
 .item-actions {
-  padding: 0 12px 12px;
+  padding: 0 12px 10px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .avatar-upload {
@@ -449,6 +459,7 @@ onMounted(async () => {
 
 .upload-tip {
   font-size: 13px;
-  color: #6b7280;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 </style>

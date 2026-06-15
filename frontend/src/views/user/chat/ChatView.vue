@@ -157,35 +157,40 @@ function formatTime(value: string) {
 
 .chat-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 300px 1fr;
   height: calc(100vh - 120px);
   min-height: 600px;
-  background: #fff;
-  border-radius: 16px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
   overflow: hidden;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
-  border: 1px solid #f0f0f0;
 }
 
+/* ── Sidebar ── */
 .conversation-panel {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #f0f0f0;
+  border-right: var(--border-pixel);
+  background: var(--color-surface);
 }
 
 .panel-header {
   display: flex;
   align-items: center;
-  height: 60px;
-  padding: 0 20px;
-  border-bottom: 1px solid #f0f0f0;
+  height: 56px;
+  padding: 0 18px;
+  border-bottom: var(--border-pixel);
+  background: #f0ede6;
+  flex-shrink: 0;
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
 }
 
 .empty-list {
@@ -197,17 +202,18 @@ function formatTime(value: string) {
 
 .empty-state {
   text-align: center;
-  color: #bbb;
+  color: var(--color-text-mute);
 }
 
 .empty-state .empty-icon {
-  font-size: 40px;
+  font-size: 36px;
   margin-bottom: 8px;
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .conversation-list {
@@ -219,30 +225,37 @@ function formatTime(value: string) {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 12px 16px;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  transition: background 0.15s;
-  border-bottom: 1px solid #fafafa;
+  border-bottom: 1.5px solid #ede9e0;
+  transition: background 0.1s;
 }
 
-.conversation-item:hover { background: #f8f9fa; }
-.conversation-item.active { background: #eef6ff; }
+.conversation-item:hover {
+  background: #f9f7f1;
+}
+
+.conversation-item.active {
+  background: #f0ede6;
+  border-left: 3px solid var(--color-primary-dk);
+}
 
 .avatar-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0095ff, #33b6ff);
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-pixel);
+  background: #f0ede6;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 600;
-  font-size: 18px;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 16px;
   overflow: hidden;
 }
 
@@ -250,12 +263,12 @@ function formatTime(value: string) {
 
 .unread-dot {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 10px;
-  height: 10px;
-  background: #ff3b30;
-  border: 2px solid #fff;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  background: var(--color-danger);
+  border: 2px solid var(--color-surface);
   border-radius: 50%;
 }
 
@@ -265,12 +278,13 @@ function formatTime(value: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
 }
 
 .conv-top strong {
-  font-size: 15px;
-  font-weight: 500;
-  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -278,22 +292,23 @@ function formatTime(value: string) {
 
 .conv-top time {
   flex-shrink: 0;
-  font-size: 12px;
-  color: #bbb;
-  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-mute);
 }
 
 .conv-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .conv-bottom .preview {
   flex: 1;
-  font-size: 13px;
-  color: #999;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-sub);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -307,14 +322,17 @@ function formatTime(value: string) {
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  margin-left: 8px;
-  font-size: 11px;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
   font-style: normal;
   color: #fff;
-  background: #ff3b30;
-  border-radius: 9px;
+  background: var(--color-danger);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-pixel);
 }
 
+/* ── Room panel ── */
 .room-panel {
   min-width: 0;
   display: flex;
@@ -327,22 +345,34 @@ function formatTime(value: string) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fafbfc;
+  background: #f9f7f1;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(45,48,71,0.04) 31px, rgba(45,48,71,0.04) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(45,48,71,0.04) 31px, rgba(45,48,71,0.04) 32px);
 }
 
-.empty-card { text-align: center; }
-.empty-icon-big { font-size: 56px; margin-bottom: 16px; }
+.empty-card {
+  text-align: center;
+  padding: 32px;
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-hard);
+}
+
+.empty-icon-big { font-size: 48px; margin-bottom: 14px; }
 
 .empty-card h3 {
   margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text);
 }
 
 .empty-card p {
   margin: 0;
-  font-size: 14px;
-  color: #999;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 </style>

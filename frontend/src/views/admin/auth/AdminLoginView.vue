@@ -31,6 +31,13 @@
           {{ loading ? '登录中...' : '登录' }}
         </button>
       </form>
+
+      <div class="switch-links">
+        <span>普通用户？</span>
+        <RouterLink to="/login">登录</RouterLink>
+        <span class="divider">|</span>
+        <RouterLink to="/register">注册</RouterLink>
+      </div>
     </div>
   </div>
 </template>
@@ -100,15 +107,19 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  background: #1a1c2e;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(255,255,255,0.03) 31px, rgba(255,255,255,0.03) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(255,255,255,0.03) 31px, rgba(255,255,255,0.03) 32px);
 }
 
 .login-card {
   width: 400px;
   padding: 40px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  background: #252840;
+  border: 2px solid var(--color-primary);
+  border-radius: 2px;
+  box-shadow: 6px 6px 0px var(--color-primary-dk);
 }
 
 .logo {
@@ -118,55 +129,105 @@ const handleLogin = async () => {
 
 .logo h1 {
   margin: 0;
-  font-size: 28px;
-  color: #2563eb;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 1px;
 }
 
 .logo p {
   margin: 8px 0 0;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 700;
   color: #6b7280;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .form-item {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   position: relative;
 }
 
 .form-item input {
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border: 2px solid #3d4165;
+  border-radius: 2px;
   font-size: 14px;
+  font-weight: 600;
   box-sizing: border-box;
+  background: #1a1c2e;
+  color: #e8e9f0;
+  transition: border-color 0.1s;
+}
+
+.form-item input::placeholder {
+  color: #4b5563;
+  font-weight: 500;
 }
 
 .form-item input:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: var(--color-primary);
 }
 
 .password-eye {
   position: absolute;
-  right: 16px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
+  font-size: 16px;
 }
 
 .login-btn {
   width: 100%;
-  padding: 14px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
+  padding: 13px;
+  background: var(--color-primary);
+  color: var(--color-text);
+  border: 2px solid var(--color-primary-dk);
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 3px 3px 0 var(--color-primary-dk);
+  transition: box-shadow 0.1s, transform 0.1s;
+  letter-spacing: 0.5px;
+}
+
+.login-btn:hover:not(:disabled) {
+  box-shadow: 1px 1px 0 var(--color-primary-dk);
+  transform: translate(2px, 2px);
 }
 
 .login-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.switch-links {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  padding-top: 18px;
+  border-top: 1.5px solid #3d4165;
+}
+
+.switch-links a {
+  color: var(--color-primary);
+  text-decoration: none;
+  margin: 0 6px;
+  font-weight: 700;
+}
+
+.switch-links a:hover { text-decoration: underline; }
+
+.switch-links .divider {
+  color: #3d4165;
+  margin: 0 2px;
 }
 </style>

@@ -314,172 +314,171 @@ onMounted(async () => {
 <style scoped>
 .list-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
+  grid-template-columns: 210px 1fr;
+  gap: 20px;
   align-items: start;
 }
 
 .filter-sidebar {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
   padding: 20px;
   position: sticky;
-  top: 20px;
+  top: 80px;
 }
 
 .filter-section {
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .filter-section:last-of-type {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .filter-title {
-  margin: 0 0 12px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #374151;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid #e5e0d8;
+  padding-bottom: 6px;
 }
 
 .filter-options {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .filter-option {
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #4b5563;
+  padding: 7px 10px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pixel);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: all 0.1s;
 }
 
 .filter-option:hover {
-  background: #f3f4f6;
+  background: #f0ede6;
+  color: var(--color-text);
+  border-color: var(--color-border);
 }
 
 .filter-option.active {
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 600;
+  background: var(--color-primary);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-hard-sm);
 }
 
 .price-range {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.range-separator {
-  color: #9ca3af;
-}
+.range-separator { color: var(--color-text-sub); font-weight: 700; }
 
-.filter-actions {
-  display: flex;
-  gap: 8px;
-}
+.filter-actions { display: flex; gap: 8px; }
 
 .list-main {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .search-bar {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard-sm);
+  padding: 14px;
 }
 
 .list-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fff;
-  border-radius: 12px;
-  padding: 12px 16px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard-sm);
+  padding: 10px 14px;
 }
 
 .result-count {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
-.sort-options {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.sort-options { display: flex; align-items: center; gap: 8px; }
 
 .sort-label {
-  font-size: 14px;
-  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
-.sort-select {
-  width: 140px;
-}
+.sort-select { width: 140px; }
 
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 14px;
 }
 
-.skeleton-card {
-  height: 280px;
-  border-radius: 12px;
-}
+.skeleton-card { height: 270px; }
 
 .item-card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
   overflow: hidden;
-  border: 1px solid #e5e7eb;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: box-shadow 0.1s, transform 0.1s;
 }
 
 .item-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-hard-hover);
+  transform: translate(2px, 2px);
 }
 
 .item-cover {
   position: relative;
-  height: 180px;
-  background: #f3f4f6;
+  height: 168px;
+  background: #f0ede6;
+  border-bottom: var(--border-pixel);
 }
 
-.cover-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
+.cover-img { width: 100%; height: 100%; display: block; }
 
 .item-price-tag {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 6px 10px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  padding: 5px 10px;
+  background: var(--color-text);
+  color: var(--color-secondary);
+  font-size: 15px;
+  font-weight: 800;
 }
 
-.item-info {
-  padding: 12px;
-}
+.item-info { padding: 10px 12px; }
 
 .item-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -487,38 +486,44 @@ onMounted(async () => {
 
 .item-meta {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: 6px;
   align-items: center;
-}
-
-.item-category,
-.item-quality {
-  font-size: 12px;
-  color: #9ca3af;
+  flex-wrap: wrap;
 }
 
 .item-category {
-  background: #f3f4f6;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  background: #f0ede6;
+  border: 1.5px solid var(--color-border);
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-pixel);
 }
 
-.item-footer {
-  margin-top: 8px;
+.item-quality {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
+
+.item-footer { margin-top: 6px; }
 
 .seller-name {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: #9ca3af;
+  font-weight: 600;
+  color: var(--color-text-mute);
 }
 
 .empty-state {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
   padding: 60px 0;
   display: flex;
   flex-direction: column;
@@ -529,8 +534,10 @@ onMounted(async () => {
 .pagination-wrapper {
   display: flex;
   justify-content: center;
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard-sm);
+  padding: 14px;
 }
 </style>

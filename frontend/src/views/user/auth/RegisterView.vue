@@ -165,58 +165,63 @@ async function handleRegister() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-bg);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(45,48,71,0.05) 31px, rgba(45,48,71,0.05) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(45,48,71,0.05) 31px, rgba(45,48,71,0.05) 32px);
 }
 
 .register-card {
   width: 420px;
   padding: 40px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
 }
 
 .register-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .brand {
   margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #667eea;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -1px;
 }
 
 .subtitle {
   margin: 8px 0 0;
-  color: #6b7280;
-  font-size: 14px;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.register-form {
-  margin-bottom: 24px;
-}
+.register-form { margin-bottom: 20px; }
 
 .register-btn {
   width: 100%;
   height: 44px;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .register-footer {
   text-align: center;
   font-size: 14px;
-  color: #6b7280;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
 .link {
-  color: #667eea;
-  font-weight: 600;
+  color: var(--color-primary-dk);
+  font-weight: 700;
   margin-left: 4px;
+  text-decoration: none;
 }
 
-.link:hover {
-  text-decoration: underline;
-}
+.link:hover { text-decoration: underline; }
 </style>

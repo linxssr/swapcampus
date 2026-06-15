@@ -108,15 +108,19 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-bg);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(45,48,71,0.05) 31px, rgba(45,48,71,0.05) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(45,48,71,0.05) 31px, rgba(45,48,71,0.05) 32px);
 }
 
 .login-card {
   width: 400px;
   padding: 40px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  border: var(--border-pixel);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-hard);
 }
 
 .login-header {
@@ -126,58 +130,61 @@ async function handleLogin() {
 
 .brand {
   margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  color: #667eea;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -1px;
+}
+
+.brand span {
+  color: var(--color-primary-dk);
 }
 
 .subtitle {
   margin: 8px 0 0;
-  color: #6b7280;
-  font-size: 14px;
+  color: var(--color-text-sub);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.login-form {
-  margin-bottom: 24px;
-}
+.login-form { margin-bottom: 20px; }
 
 .login-btn {
   width: 100%;
   height: 44px;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .login-footer {
   text-align: center;
   font-size: 14px;
-  color: #6b7280;
+  font-weight: 600;
+  color: var(--color-text-sub);
 }
 
 .link {
-  color: #667eea;
-  font-weight: 600;
+  color: var(--color-primary-dk);
+  font-weight: 700;
   margin-left: 4px;
-}
-
-.link:hover {
-  text-decoration: underline;
-}
-
-.admin-entry {
-  text-align: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.admin-link {
-  font-size: 13px;
-  color: #9ca3af;
   text-decoration: none;
 }
 
-.admin-link:hover {
-  color: #667eea;
-  text-decoration: underline;
+.link:hover { text-decoration: underline; }
+
+.admin-entry {
+  text-align: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1.5px solid #e5e0d8;
 }
+
+.admin-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  text-decoration: none;
+}
+
+.admin-link:hover { color: var(--color-text); text-decoration: underline; }
 </style>
