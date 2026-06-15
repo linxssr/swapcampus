@@ -1,7 +1,7 @@
 export interface ChatMessagePayload {
   toUid: number | string;
   content?: string;
-  msgType?: 1 | 2 | 3;
+  msgType?: number;
   imageUrl?: string;
 }
 
@@ -10,10 +10,10 @@ export interface ChatMessageVO {
   fromUid: number;
   toUid: number;
   content: string;
-  msgType: 1 | 2 | 3;
+  msgType: number;
   imageUrl?: string;
   sendTime: string;
-  isRead: 0 | 1;
+  isRead: number;
 }
 
 export interface ChatConversationVO {
@@ -22,7 +22,7 @@ export interface ChatConversationVO {
   peerAvatar?: string;
   lastMsgId: number;
   lastContent: string;
-  lastMsgType: 1 | 2 | 3;
+  lastMsgType: number;
   lastSendTime: string;
   unreadCount: number;
 }

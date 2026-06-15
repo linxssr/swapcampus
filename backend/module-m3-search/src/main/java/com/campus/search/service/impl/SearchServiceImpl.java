@@ -7,6 +7,7 @@ import com.campus.mapper.ItemMapper;
 import com.campus.model.entity.Category;
 import com.campus.model.entity.Item;
 import com.campus.model.entity.ItemCollect;
+import com.campus.model.vo.ItemVO;
 import com.campus.search.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,17 +34,17 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<Item> listItemsByCategoryId(Long cid) {
+    public List<ItemVO> listItemsByCategoryId(Long cid) {
         return itemMapper.listByCategoryId(cid);
     }
 
     @Override
-    public List<Item> searchItemsByKeyword(String key) {
+    public List<ItemVO> searchItemsByKeyword(String key) {
         return itemMapper.searchByKeyword(key);
     }
 
     @Override
-    public List<Item> filterItems(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Integer quality) {
+    public List<ItemVO> filterItems(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Integer quality) {
         return itemMapper.filterItems(categoryId, minPrice, maxPrice, quality);
     }
 

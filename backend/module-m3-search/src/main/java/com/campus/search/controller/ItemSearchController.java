@@ -1,7 +1,7 @@
 package com.campus.search.controller;
 
 import com.campus.common.result.Result;
-import com.campus.model.entity.Item;
+import com.campus.model.vo.ItemVO;
 import com.campus.search.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,23 +17,20 @@ public class ItemSearchController {
     private SearchService searchService;
 
     @GetMapping("/cate/{cid}")
-    public Result<List<Item>> listItemsByCategory(@PathVariable Long cid) {
-        List<Item> items = searchService.listItemsByCategoryId(cid);
-        return Result.success(items);
+    public Result<List<ItemVO>> listItemsByCategory(@PathVariable Long cid) {
+        return Result.success(searchService.listItemsByCategoryId(cid));
     }
 
     @GetMapping("/search")
-    public Result<List<Item>> searchItems(@RequestParam("key") String key) {
-        List<Item> items = searchService.searchItemsByKeyword(key);
-        return Result.success(items);
+    public Result<List<ItemVO>> searchItems(@RequestParam("key") String key) {
+        return Result.success(searchService.searchItemsByKeyword(key));
     }
 
     @GetMapping("/filter")
-    public Result<List<Item>> filterItems(@RequestParam(required = false) Long categoryId,
-                                          @RequestParam(required = false) BigDecimal minPrice,
-                                          @RequestParam(required = false) BigDecimal maxPrice,
-                                          @RequestParam(required = false) Integer quality) {
-        List<Item> items = searchService.filterItems(categoryId, minPrice, maxPrice, quality);
-        return Result.success(items);
+    public Result<List<ItemVO>> filterItems(@RequestParam(required = false) Long categoryId,
+                                            @RequestParam(required = false) BigDecimal minPrice,
+                                            @RequestParam(required = false) BigDecimal maxPrice,
+                                            @RequestParam(required = false) Integer quality) {
+        return Result.success(searchService.filterItems(categoryId, minPrice, maxPrice, quality));
     }
 }

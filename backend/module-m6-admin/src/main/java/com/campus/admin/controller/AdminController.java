@@ -99,12 +99,16 @@ public class AdminController {
     }
 
     /**
-     * 3. 全部举报列表
-     * GET /api/v1/admin/report/list?handleStatus=0/1
+     * 举报列表（分页 + 筛选 + 搜索）
+     * GET /api/v1/admin/report/list?handleStatus=0&page=1&size=10&keyword=xxx
      */
     @GetMapping("/report/list")
-    public Map<String, Object> getReportList(@RequestHeader("Authorization") String token,
-                                             @RequestParam(required = false) Integer handleStatus) {
+    public Map<String, Object> getReportList(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(required = false) Integer handleStatus,
+            @RequestParam(defaultValue = "1") Integer page,           // 新增
+            @RequestParam(defaultValue = "10") Integer size,         // 新增
+            @RequestParam(required = false) String keyword) {        // 新增
         Map<String, Object> result = new HashMap<>();
 
         if (!jwtUtil.validateToken(token)) {
@@ -113,10 +117,24 @@ public class AdminController {
             return result;
         }
 
-        List<Map<String, Object>> list = adminService.getReportList(handleStatus);
-        result.put("code", 200);
-        result.put("message", "获取成功");
-        result.put("data", list);
+        try {
+            int offset = (page - 1) * size;
+            List<Map<String, Object>> list = adminService.getReportList(handleStatus, keyword, offset, size);
+            int total = adminService.countReportList(handleStatus, keyword);
+
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", list);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("total", total);
+            result.put("totalPages", (int) Math.ceil((double) total / size));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
         return result;
     }
 
@@ -299,6 +317,325 @@ public class AdminController {
             result.put("code", 409);
             result.put("message", "管理员账号已存在");
         }
+        return result;
+    }
+
+    /**
+     * 获取商品列表（分页 + 按审核状态筛选）
+     * GET /api/v1/admin/item/list?auditStatus=0&page=1&size=10
+     * @param auditStatus 审核状态: 0-待审核 1-已通过 2-已驳回，不传则查全部
+     * @param page 页码，默认1
+     * @param size 每页条数，默认10
+     */
+    @GetMapping("/item/list")
+    public Map<String, Object> getItemList(
+            @RequestParam(value = "auditStatus", required = false) Integer auditStatus,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 验证管理员token
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            // 计算偏移量
+            int offset = (page - 1) * size;
+
+            // 查询数据
+            List<Map<String, Object>> items = adminService.getItemList(auditStatus, keyword, offset, size);
+            int total = adminService.countItemList(auditStatus, keyword); ;
+
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", items);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("total", total);
+            result.put("totalPages", (int) Math.ceil((double) total / size));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+
+    /**
+     * 分类列表（分页 + 搜索）
+     * GET /api/v1/admin/category/list?page=1&size=10&keyword=
+     */
+    @GetMapping("/category/list")
+    public Map<String, Object> getCategoryList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String keyword,
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 验证管理员token
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            int offset = (page - 1) * size;
+            List<Map<String, Object>> list = adminService.getCategoryList(keyword, offset, size);
+            int total = adminService.countCategoryList(keyword);
+
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", list);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("total", total);
+            result.put("totalPages", (int) Math.ceil((double) total / size));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+
+    /**
+     * 修改分类状态（启用/禁用）
+     * PUT /api/v1/admin/category/status?categoryId=1&status=0
+     * status: 0-禁用 1-启用
+     */
+    @PutMapping("/category/status")
+    public Map<String, Object> updateCategoryStatus(
+            @RequestParam Long categoryId,
+            @RequestParam Integer status,
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 验证管理员token
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            boolean success = adminService.updateCategoryStatus(categoryId, status);
+            if (success) {
+                result.put("code", 200);
+                result.put("message", status == 1 ? "分类已启用" : "分类已禁用");
+            } else {
+                result.put("code", 500);
+                result.put("message", "操作失败");
+            }
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 仪表盘统计数据
+     * GET /api/v1/admin/dashboard/stat
+     */
+    @GetMapping("/dashboard/stat")
+    public Map<String, Object> getDashboardStat(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            Map<String, Object> data = adminService.getDashboardStat();
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", data);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+
+    /**
+     * 近7天数据统计（用于图表）
+     * GET /api/v1/admin/dashboard/trend
+     */
+    @GetMapping("/dashboard/trend")
+    public Map<String, Object> getTrendData(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            Map<String, Object> data = adminService.getTrendData();
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", data);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+
+    /**
+     * 订单状态分布统计
+     * GET /api/v1/admin/dashboard/order-status
+     */
+    @GetMapping("/dashboard/order-status")
+    public Map<String, Object> getOrderStatusStat(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            List<Map<String, Object>> data = adminService.getOrderStatusStat();
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", data);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+
+    /**
+     * 分类商品数量统计（Top 5）
+     * GET /api/v1/admin/dashboard/category-stats
+     */
+    @GetMapping("/dashboard/category-stats")
+    public Map<String, Object> getCategoryStats(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            List<Map<String, Object>> data = adminService.getCategoryStats();
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", data);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
+        return result;
+    }
+    /**
+     * 调整用户信用分
+     * PUT /api/v1/admin/user/credit
+     * Body: {"userId": 69, "changeAmount": 5}  正数加分，负数减分
+     */
+    @PutMapping("/user/credit")
+    public Map<String, Object> updateCreditScore(
+            @RequestBody Map<String, Object> request,
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 验证管理员token
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            Long userId = ((Number) request.get("userId")).longValue();
+            Integer changeAmount = (Integer) request.get("changeAmount");
+
+            if (changeAmount == null) {
+                result.put("code", 400);
+                result.put("message", "请填写调整分数");
+                return result;
+            }
+
+            int newScore = adminService.updateCreditScore(userId, changeAmount);
+
+            result.put("code", 200);
+            result.put("message", changeAmount > 0 ? "信用分增加成功" : "信用分减少成功");
+            result.put("data", newScore);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 订单列表（分页 + 筛选 + 搜索）
+     * GET /api/v1/admin/order/list?page=1&size=10&orderStatus=1&keyword=
+     */
+    @GetMapping("/order/list")
+    public Map<String, Object> getOrderList(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Integer orderStatus,
+            @RequestParam(required = false) String keyword,
+            @RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+
+        try {
+            int offset = (page - 1) * size;
+            List<Map<String, Object>> orders = adminService.getOrderList(orderStatus, keyword, offset, size);
+            int total = adminService.countOrderList(orderStatus, keyword);
+
+            // 获取各状态订单数量
+            Map<String, Integer> statusCount = adminService.getOrderStatusCount();
+
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", orders);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("total", total);
+            result.put("totalPages", (int) Math.ceil((double) total / size));
+            result.put("statusCount", statusCount);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+            result.put("data", null);
+        }
+
         return result;
     }
 }

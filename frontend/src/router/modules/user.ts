@@ -33,6 +33,11 @@ export const userRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
       },
       {
+        path: 'user/:userId',
+        name: 'UserHome',
+        component: () => import('@/views/user/profile/UserHomeView.vue'),
+      },
+      {
         path: 'orders',
         name: 'OrderList',
         component: () => import('@/views/user/order/OrderListView.vue'),

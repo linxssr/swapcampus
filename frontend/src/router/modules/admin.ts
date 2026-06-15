@@ -18,24 +18,29 @@ export const adminRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/admin/dashboard/DashboardView.vue'),
       },
       {
-        path: 'items',
+        path: 'item/audit',
         name: 'AdminItemAudit',
         component: () => import('@/views/admin/item/ItemAuditView.vue'),
       },
       {
-        path: 'users',
+        path: 'user/manage',
         name: 'AdminUserManage',
         component: () => import('@/views/admin/user/UserManageView.vue'),
       },
       {
-        path: 'reports',
+        path: 'report/list',
         name: 'AdminReportManage',
         component: () => import('@/views/admin/report/ReportManageView.vue'),
       },
       {
-        path: 'categories',
+        path: 'category/manage',
         name: 'AdminCategoryManage',
         component: () => import('@/views/admin/category/CategoryManageView.vue'),
+      },
+      {
+        path: 'order/list',
+        name: 'AdminOrderList',
+        component: () => import('@/views/admin/order/OrderListView.vue'),
       },
     ],
   },

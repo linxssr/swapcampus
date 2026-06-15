@@ -61,29 +61,37 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus';
 import { getChatConversations } from '@/api/modules/chat';
+import { useAuthStore } from '@/stores/modules/auth';
 import type { ChatConversationVO } from '@/types/chat';
 
 const route = useRoute();
 const router = useRouter();
-const currentUid = ref(String(route.query.uid || localStorage.getItem('swapcampus_dev_uid') || '1'));
+const authStore = useAuthStore();
 const conversations = ref<ChatConversationVO[]>([]);
 
-onMounted(() => {
-  localStorage.setItem('swapcampus_dev_uid', currentUid.value);
+const currentUid = computed(() => authStore.userInfo?.userId ?? null);
+
+onMounted(async () => {
+  if (!authStore.isLoggedIn) {
+    ElMessage.error('请先登录');
+    router.push('/login');
+    return;
+  }
+  
+  if (!authStore.userInfo) {
+    await authStore.fetchUserInfo();
+  }
+  
   loadConversations();
   handleQueryRedirect();
 });
 
-watch(() => route.query.uid, (uid) => {
-  const nextUid = String(uid || localStorage.getItem('swapcampus_dev_uid') || '1');
-  if (nextUid !== currentUid.value) {
-    currentUid.value = nextUid;
-    localStorage.setItem('swapcampus_dev_uid', nextUid);
-    loadConversations();
-  }
+watch(currentUid, (uid) => {
+  if (uid) loadConversations();
 });
 
 function handleQueryRedirect() {
@@ -91,16 +99,17 @@ function handleQueryRedirect() {
   if (toUid && !route.params.toUid) {
     router.replace({
       path: `/chat/room/${toUid}`,
-      query: { uid: currentUid.value, itemId: route.query.itemId as string },
+      query: { itemId: route.query.itemId as string },
     });
   }
 }
 
 async function loadConversations() {
   try {
-    const result = await getChatConversations(currentUid.value);
+    const result = await getChatConversations();
     conversations.value = result.data || [];
-  } catch {
+  } catch (error) {
+    console.error('加载会话列表失败:', error);
     conversations.value = [];
   }
 }
@@ -108,7 +117,7 @@ async function loadConversations() {
 function buildRoomPath(peerUid: number) {
   return {
     path: `/chat/room/${peerUid}`,
-    query: { uid: currentUid.value, itemId: route.query.itemId },
+    query: { itemId: route.query.itemId },
   };
 }
 
@@ -162,7 +171,6 @@ function formatTime(value: string) {
   display: flex;
   flex-direction: column;
   border-right: 1px solid #f0f0f0;
-  background: #fff;
 }
 
 .panel-header {
@@ -219,13 +227,8 @@ function formatTime(value: string) {
   border-bottom: 1px solid #fafafa;
 }
 
-.conversation-item:hover {
-  background: #f8f9fa;
-}
-
-.conversation-item.active {
-  background: #eef6ff;
-}
+.conversation-item:hover { background: #f8f9fa; }
+.conversation-item.active { background: #eef6ff; }
 
 .avatar-wrap {
   position: relative;
@@ -243,11 +246,7 @@ function formatTime(value: string) {
   overflow: hidden;
 }
 
-.avatar-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
 
 .unread-dot {
   position: absolute;
@@ -260,10 +259,7 @@ function formatTime(value: string) {
   border-radius: 50%;
 }
 
-.conv-body {
-  flex: 1;
-  min-width: 0;
-}
+.conv-body { flex: 1; min-width: 0; }
 
 .conv-top {
   display: flex;
@@ -334,14 +330,8 @@ function formatTime(value: string) {
   background: #fafbfc;
 }
 
-.empty-card {
-  text-align: center;
-}
-
-.empty-icon-big {
-  font-size: 56px;
-  margin-bottom: 16px;
-}
+.empty-card { text-align: center; }
+.empty-icon-big { font-size: 56px; margin-bottom: 16px; }
 
 .empty-card h3 {
   margin: 0 0 8px;

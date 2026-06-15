@@ -8,7 +8,7 @@
           <p class="status">{{ connected ? '在线' : '连接中...' }}</p>
         </div>
       </div>
-      <RouterLink class="close-btn" :to="{ path: '/chat', query: { uid: currentUid } }">
+      <RouterLink class="close-btn" :to="{ path: '/chat' }">
         <span class="close-icon">&times;</span>
       </RouterLink>
     </header>
@@ -87,10 +87,13 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import UploadImg from '@/components/upload/UploadImg.vue';
 import { getChatHistory, markChatMessageRead } from '@/api/modules/chat';
+import { getUserProfile } from '@/api/modules/user';
+import { useAuthStore } from '@/stores/modules/auth';
+import { StorageKey } from '@/constants/storage';
 import type { ChatMessagePayload, ChatMessageVO } from '@/types/chat';
 
 const emit = defineEmits<{
@@ -98,9 +101,12 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
-const currentUid = Number(route.query.uid || localStorage.getItem('swapcampus_dev_uid') || '1');
-const toUid = Number(route.params.toUid || route.query.toUid || '2');
-const peerName = computed(() => `用户${toUid}`);
+const router = useRouter();
+const authStore = useAuthStore();
+
+const currentUid = computed(() => authStore.userInfo?.userId ?? null);
+const toUid = Number(route.params.toUid || route.query.toUid || '0');
+const peerName = ref(`用户${toUid}`);
 
 const inputText = ref('');
 const connected = ref(false);
@@ -129,7 +135,37 @@ const groupedMessages = computed(() => {
 });
 
 onMounted(async () => {
-  localStorage.setItem('swapcampus_dev_uid', String(currentUid));
+  if (!authStore.isLoggedIn) {
+    ElMessage.error('请先登录');
+    router.push('/login');
+    return;
+  }
+
+  if (!authStore.userInfo) {
+    await authStore.fetchUserInfo();
+  }
+
+  if (!currentUid.value) {
+    ElMessage.error('获取用户信息失败，请重新登录');
+    router.push('/login');
+    return;
+  }
+
+  if (currentUid.value === toUid) {
+    ElMessage.error('不能和自己聊天');
+    router.push('/chat');
+    return;
+  }
+
+  try {
+    const result = await getUserProfile(toUid);
+    if (result.code === 200 && result.data) {
+      peerName.value = result.data.username || `用户${toUid}`;
+    }
+  } catch (error) {
+    console.error('获取对方用户信息失败:', error);
+  }
+
   await loadHistory();
   connectSocket();
 });
@@ -139,19 +175,30 @@ onBeforeUnmount(() => {
 });
 
 async function loadHistory() {
+  if (!currentUid.value) return;
+  
   try {
-    const result = await getChatHistory(toUid, currentUid);
+    const result = await getChatHistory(toUid);
     messages.value = result.data || [];
     await scrollToBottom();
     emit('messageChange');
-  } catch {
+  } catch (error) {
+    console.error('加载聊天记录失败:', error);
     messages.value = [];
   }
 }
 
 function connectSocket() {
+  if (!currentUid.value) return;
+  
   socket.value?.close();
-  const wsUrl = `ws://localhost:8080/ws/chat?token=${encodeURIComponent(String(currentUid))}`;
+  const token = localStorage.getItem(StorageKey.Token);
+  if (!token) {
+    ElMessage.error('未找到登录凭证');
+    return;
+  }
+  
+  const wsUrl = `ws://localhost:8080/ws/chat?token=${encodeURIComponent(token)}`;
   socket.value = new WebSocket(wsUrl);
 
   socket.value.onopen = () => {
@@ -170,8 +217,8 @@ function connectSocket() {
       }
 
       upsertMessage(msg);
-      if (msg.toUid === currentUid && msg.isRead === 0) {
-        await markChatMessageRead(msg.msgId, currentUid);
+      if (msg.toUid === currentUid.value && msg.isRead === 0) {
+        await markChatMessageRead(msg.msgId);
         msg.isRead = 1;
       }
       await scrollToBottom();
@@ -192,7 +239,7 @@ function connectSocket() {
 }
 
 function isCurrentRoomMessage(msg: ChatMessageVO) {
-  return [msg.fromUid, msg.toUid].includes(currentUid) && [msg.fromUid, msg.toUid].includes(toUid);
+  return [msg.fromUid, msg.toUid].includes(currentUid.value!) && [msg.fromUid, msg.toUid].includes(toUid);
 }
 
 function sendText() {

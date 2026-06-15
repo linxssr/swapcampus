@@ -20,6 +20,9 @@ public interface CategoryMapper {
     @Select("SELECT * FROM category ORDER BY sort ASC")
     List<Map<String, Object>> selectAllCategories();
 
+    @Select("SELECT * FROM category WHERE category_id = #{categoryId}")
+    Category selectById(Long categoryId);
+
     /**
      * 根据ID获取分类
      */

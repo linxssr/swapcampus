@@ -19,16 +19,21 @@ const router = createRouter({
 router.beforeEach((to) => {
   const authStore = useAuthStore();
 
+  // 管理员路由：用独立的 adminToken 校验
+  if (to.meta.role === 'admin') {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      return '/admin/login';
+    }
+    return true;
+  }
+
   if (!to.meta.requiresAuth) {
     return true;
   }
 
   if (!authStore.token) {
-    return to.meta.role === 'admin' ? '/admin/login' : '/login';
-  }
-
-  if (to.meta.role && to.meta.role !== authStore.role) {
-    return authStore.role === 'admin' ? '/admin/dashboard' : '/';
+    return '/login';
   }
 
   return true;

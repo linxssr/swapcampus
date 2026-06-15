@@ -13,7 +13,8 @@ public interface AdminService {
     boolean banUser(Long userId, Integer status);
 
     // 获取举报列表
-    List<Map<String, Object>> getReportList(Integer handleStatus);
+    List<Map<String, Object>> getReportList(Integer handleStatus, String keyword, int offset, int size);
+    int countReportList(Integer handleStatus, String keyword);
 
     // 处理举报
     boolean handleReport(Long reportId, Long adminId, String result);
@@ -29,4 +30,38 @@ public interface AdminService {
 
     // 添加管理员
     boolean addAdmin(String adminName, String password, String realName, String phone);
+
+    // 获取商品列表（分页）
+    List<Map<String, Object>> getItemList(Integer auditStatus, String keyword, int offset, int size);
+
+    int countItemList(Integer auditStatus, String keyword);
+
+    // 统计商品总数
+
+    // 分类列表
+    List<Map<String, Object>> getCategoryList(String keyword, int offset, int size);
+    int countCategoryList(String keyword);
+
+    // 修改分类状态
+    boolean updateCategoryStatus(Long categoryId, Integer status);
+
+    // 仪表盘统计数据
+    Map<String, Object> getDashboardStat();
+
+    // 近7天趋势数据
+    Map<String, Object> getTrendData();
+
+    // 订单状态分布
+    List<Map<String, Object>> getOrderStatusStat();
+
+    // 分类商品统计
+    List<Map<String, Object>> getCategoryStats();
+
+    // 调整用户信用分
+    int updateCreditScore(Long userId, Integer changeAmount);
+
+    // 订单列表
+    List<Map<String, Object>> getOrderList(Integer orderStatus, String keyword, int offset, int size);
+    int countOrderList(Integer orderStatus, String keyword);
+    Map<String, Integer> getOrderStatusCount();
 }

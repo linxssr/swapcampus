@@ -9,10 +9,14 @@ const request = axios.create({
 });
 
 request.interceptors.request.use((config) => {
-  const token = localStorage.getItem(StorageKey.Token);
+  const isAdminRequest = config.url?.includes('/admin/');
+  const adminToken = localStorage.getItem('adminToken');
+  const userToken = localStorage.getItem(StorageKey.Token);
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (isAdminRequest && adminToken) {
+    config.headers.Authorization = `Bearer ${adminToken}`;
+  } else if (userToken) {
+    config.headers.Authorization = `Bearer ${userToken}`;
   }
 
   return config;
