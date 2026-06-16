@@ -120,6 +120,7 @@
 
           <el-tab-pane label="账号设置" name="settings">
             <div class="settings-section">
+               <el-button type="primary" @click="showPwdDialog = true">修改密码</el-button>
               <el-button type="danger" @click="handleLogout">退出登录</el-button>
             </div>
           </el-tab-pane>
@@ -153,6 +154,40 @@
       </template>
     </el-dialog>
   </div>
+
+  <!-- 修改密码对话框 -->
+  <el-dialog v-model="showPwdDialog" title="修改密码" width="440px">
+    <el-form :model="pwdForm" label-width="80px">
+      <el-form-item label="旧密码">
+        <el-input
+          v-model="pwdForm.oldPassword"
+          type="password"
+          placeholder="请输入旧密码"
+          show-password
+        />
+      </el-form-item>
+      <el-form-item label="新密码">
+        <el-input
+          v-model="pwdForm.newPassword"
+          type="password"
+          placeholder="请输入新密码（至少6位）"
+          show-password
+        />
+      </el-form-item>
+      <el-form-item label="确认密码">
+        <el-input
+          v-model="pwdForm.confirmPassword"
+          type="password"
+          placeholder="请再次输入新密码"
+          show-password
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="showPwdDialog = false">取消</el-button>
+      <el-button type="primary" :loading="pwdLoading" @click="handleUpdatePassword">确认修改</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -315,6 +350,63 @@ async function handleLogout() {
   }
 }
 
+// 修改密码相关
+const showPwdDialog = ref(false);
+const pwdLoading = ref(false);
+const pwdForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+});
+
+// 修改密码
+async function handleUpdatePassword() {
+  // 校验
+  if (!pwdForm.oldPassword) {
+    ElMessage.error('请输入旧密码');
+    return;
+  }
+  if (!pwdForm.newPassword) {
+    ElMessage.error('请输入新密码');
+    return;
+  }
+  if (pwdForm.newPassword.length < 6) {
+    ElMessage.error('新密码长度不能少于6位');
+    return;
+  }
+  if (pwdForm.newPassword !== pwdForm.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致');
+    return;
+  }
+
+  pwdLoading.value = true;
+  try {
+    // 导入 updatePassword 函数
+    const { updatePassword } = await import('@/api/modules/user');
+    await updatePassword({
+      oldPassword: pwdForm.oldPassword,
+      newPassword: pwdForm.newPassword
+    });
+    ElMessage.success('密码修改成功，请重新登录');
+    showPwdDialog.value = false;
+
+    // 清空表单
+    pwdForm.oldPassword = '';
+    pwdForm.newPassword = '';
+    pwdForm.confirmPassword = '';
+
+    // 退出登录
+    setTimeout(() => {
+      authStore.clearAuth();
+      router.push('/login');
+    }, 1500);
+  } catch (error: any) {
+    ElMessage.error(error?.response?.data?.message || '修改密码失败');
+  } finally {
+    pwdLoading.value = false;
+  }
+}
+
 onMounted(async () => {
   if (!authStore.isLoggedIn) {
     router.push('/login');
@@ -323,6 +415,8 @@ onMounted(async () => {
   await loadUserInfo();
   await loadMyItems();
 });
+
+
 </script>
 
 <style scoped>
@@ -491,5 +585,17 @@ onMounted(async () => {
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-sub);
+}
+
+.settings-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 200px;
+}
+
+.settings-buttons .el-button {
+  margin: 0;
+  width: 100%;
 }
 </style>
