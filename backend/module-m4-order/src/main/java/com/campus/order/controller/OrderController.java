@@ -51,6 +51,19 @@ public class OrderController {
         return Result.success(order);
     }
 
+    @PutMapping("/confirm/{oid}")
+    public Result<Void> confirmOrder(@PathVariable("oid") String oid,
+                                     HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (!jwtUtil.validateToken(token)) {
+            return Result.error(401, "请先登录");
+        }
+
+        Long currentUserId = jwtUtil.getUserIdFromToken(token);
+        orderService.confirmOrder(oid, currentUserId);
+        return Result.success(null, "订单已确认");
+    }
+
     @PutMapping("/cancel/{oid}")
     public Result<Void> cancelOrder(@PathVariable("oid") String oid,
                                     HttpServletRequest request) {

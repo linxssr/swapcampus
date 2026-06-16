@@ -3,6 +3,7 @@ package com.campus.item.service.impl;
 import com.campus.common.exception.BusinessException;
 import com.campus.common.utils.MinIOUtil;
 import com.campus.item.service.ItemService;
+import com.campus.mapper.BrowseHistoryMapper;
 import com.campus.mapper.CategoryMapper;
 import com.campus.mapper.ItemImageMapper;
 import com.campus.mapper.ItemMapper;
@@ -20,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,17 +35,20 @@ public class ItemServiceImpl implements ItemService {
     private final ItemImageMapper itemImageMapper;
     private final UserMapper userMapper;
     private final CategoryMapper categoryMapper;
+    private final BrowseHistoryMapper browseHistoryMapper;
 
     public ItemServiceImpl(MinIOUtil minIOUtil,
                            ItemMapper itemMapper,
                            ItemImageMapper itemImageMapper,
                            UserMapper userMapper,
-                           CategoryMapper categoryMapper) {
+                           CategoryMapper categoryMapper,
+                           BrowseHistoryMapper browseHistoryMapper) {
         this.minIOUtil = minIOUtil;
         this.itemMapper = itemMapper;
         this.itemImageMapper = itemImageMapper;
         this.userMapper = userMapper;
         this.categoryMapper = categoryMapper;
+        this.browseHistoryMapper = browseHistoryMapper;
     }
 
     @Override
@@ -206,5 +208,75 @@ public class ItemServiceImpl implements ItemService {
             images.add(img);
         }
         itemImageMapper.insertBatch(images);
+    }
+
+    @Override
+    public void recordBrowse(Long userId, Long itemId) {
+        Item item = itemMapper.selectById(itemId);
+        if (item == null) return;
+        browseHistoryMapper.upsert(userId, itemId, item.getCategoryId(), LocalDateTime.now());
+    }
+
+    @Override
+    public List<ItemVO> getRecommendItems(Long userId, int limit) {
+        // 取最近 30 条浏览，统计 top3 分类
+        List<Map<String, Object>> topCats = browseHistoryMapper.topCategories(userId, 30);
+        if (topCats == null || topCats.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> browsedIds = browseHistoryMapper.browsedItemIds(userId);
+        Set<Long> browsedSet = new HashSet<>(browsedIds);
+
+        // 计算每个分类应分配的数量（按出现次数权重）
+        long total = topCats.stream()
+                .mapToLong(m -> ((Number) m.get("cnt")).longValue())
+                .sum();
+
+        List<Long> topCatIds = topCats.stream()
+                .limit(3)
+                .map(m -> ((Number) m.get("categoryId")).longValue())
+                .collect(Collectors.toList());
+
+        List<ItemVO> result = new ArrayList<>();
+
+        for (Map<String, Object> catRow : topCats.stream().limit(3).collect(Collectors.toList())) {
+            long catId = ((Number) catRow.get("categoryId")).longValue();
+            long cnt   = ((Number) catRow.get("cnt")).longValue();
+            int quota  = (int) Math.max(1, Math.round((double) cnt / total * limit));
+
+            List<Item> candidates = itemMapper.selectByCategory(catId);
+            candidates.stream()
+                    .filter(it -> !browsedSet.contains(it.getItemId()))
+                    .filter(it -> !it.getUserId().equals(userId))
+                    .limit(quota)
+                    .forEach(it -> {
+                        User seller = userMapper.selectById(it.getUserId());
+                        Category cat = categoryMapper.selectById(it.getCategoryId());
+                        ItemVO vo = ItemVO.fromEntity(it);
+                        vo.setSellerName(seller != null ? seller.getUsername() : "");
+                        vo.setSellerCreditScore(seller != null ? seller.getCreditScore() : null);
+                        vo.setCategoryName(cat != null ? cat.getCategoryName() : "");
+                        result.add(vo);
+                    });
+        }
+
+        // 随机打散，避免全是同一分类
+        Collections.shuffle(result);
+
+        // 若结果不足，用最新商品补足（排除已浏览和自己的）
+        if (result.size() < limit) {
+            Set<Long> resultIds = result.stream().map(ItemVO::getItemId).collect(Collectors.toSet());
+            List<ItemVO> fallback = itemMapper.filterItems(null, null, null, null);
+            if (fallback == null) fallback = Collections.emptyList();
+            fallback.stream()
+                    .filter(it -> !browsedSet.contains(it.getItemId()))
+                    .filter(it -> !it.getUserId().equals(userId))
+                    .filter(it -> !resultIds.contains(it.getItemId()))
+                    .limit((long) limit - result.size())
+                    .forEach(result::add);
+        }
+
+        return result.stream().limit(limit).collect(Collectors.toList());
     }
 }

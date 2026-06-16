@@ -24,10 +24,16 @@
             </div>
           </div>
         </div>
-        <el-button type="primary" text @click="showEditDialog = true">
-          <el-icon><Edit /></el-icon>
-          编辑资料
-        </el-button>
+        <div class="card-actions">
+          <el-button type="primary" text @click="router.push('/credit')">
+            <el-icon><Trophy /></el-icon>
+            积分中心
+          </el-button>
+          <el-button type="primary" text @click="showEditDialog = true">
+            <el-icon><Edit /></el-icon>
+            编辑资料
+          </el-button>
+        </div>
       </div>
 
       <div class="content-tabs">
@@ -48,7 +54,9 @@
                 class="item-card"
                 @click="router.push(`/items/${item.itemId}`)"
               >
-                <el-image :src="item.coverUrl" fit="cover" class="item-cover" />
+                <el-image :src="toProxiedUrl(item.coverUrl)" fit="cover" class="item-cover">
+                  <template #error><div class="img-error">暂无图片</div></template>
+                </el-image>
                 <div class="item-info">
                   <div class="item-title">{{ item.title }}</div>
                   <div class="item-price">¥{{ item.price }}</div>
@@ -91,7 +99,9 @@
                 class="item-card"
                 @click="router.push(`/items/${collect.itemId}`)"
               >
-                <el-image :src="collect.item?.coverUrl || ''" fit="cover" class="item-cover" />
+                <el-image :src="toProxiedUrl(collect.item?.coverUrl || '')" fit="cover" class="item-cover">
+                  <template #error><div class="img-error">暂无图片</div></template>
+                </el-image>
                 <div class="item-info">
                   <div class="item-title">{{ collect.item?.title || '商品' }}</div>
                   <div class="item-price">¥{{ collect.item?.price }}</div>
@@ -146,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { Edit } from '@element-plus/icons-vue';
+import { Edit, Trophy } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -155,6 +165,7 @@ import UploadImg from '@/components/upload/UploadImg.vue';
 import { getMyItems, deleteItem } from '@/api/modules/item';
 import { getMyCollects, cancelCollect } from '@/api/modules/collect';
 import { getUserInfo, updateUserInfo } from '@/api/modules/user';
+import { toProxiedUrl } from '@/utils/upload';
 import { useAuthStore } from '@/stores/modules/auth';
 import type { ItemVO } from '@/types/item';
 import type { CollectVO } from '@/api/modules/collect';
@@ -332,6 +343,13 @@ onMounted(async () => {
   justify-content: space-between;
 }
 
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -416,6 +434,18 @@ onMounted(async () => {
   display: block;
   background: #f0ede6;
   border-bottom: var(--border-pixel);
+}
+
+.img-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  background: #f0ede6;
 }
 
 .item-info { padding: 10px 12px; }

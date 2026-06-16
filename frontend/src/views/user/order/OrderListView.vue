@@ -47,13 +47,19 @@
               <el-button size="small" @click="viewDetail(row)">详情</el-button>
               <el-button size="small" @click="contactPeer(row)">联系对方</el-button>
               <el-button
-                v-if="activeType === 'buy' && row.orderStatus === 1"
+                v-if="activeType === 'sell' && row.orderStatus === 1"
+                size="small"
+                type="primary"
+                @click="handleConfirmOrder(row)"
+              >确认订单</el-button>
+              <el-button
+                v-if="activeType === 'buy' && row.orderStatus === 2"
                 size="small"
                 type="success"
                 @click="confirmFinish(row)"
               >确认收货</el-button>
               <el-button
-                v-if="row.orderStatus === 1"
+                v-if="row.orderStatus === 1 || row.orderStatus === 2"
                 size="small"
                 type="warning"
                 @click="confirmCancel(row)"
@@ -159,7 +165,7 @@ import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
 import PageHeader from '@/components/common/PageHeader.vue';
-import { addComment, cancelOrder, finishOrder, getMyOrders, getOrderComment } from '@/api/modules/order';
+import { addComment, cancelOrder, confirmOrder, finishOrder, getMyOrders, getOrderComment } from '@/api/modules/order';
 import type { AddCommentPayload, CommentRecord, OrderQueryType, OrderRecord } from '@/types/order';
 
 const router = useRouter();
@@ -223,6 +229,15 @@ function contactPeer(row: OrderRecord) {
   const peerId = activeType.value === 'buy' ? row.sellerId : row.buyerId;
   if (!peerId) { ElMessage.warning('无法获取对方用户ID'); return; }
   router.push(`/chat/room/${peerId}`);
+}
+
+async function handleConfirmOrder(row: OrderRecord) {
+  try {
+    await ElMessageBox.confirm('确认接受该订单吗？确认后买家可进行取件。', '确认订单', { type: 'info' });
+    await confirmOrder(row.orderNo);
+    ElMessage.success('订单已确认');
+    loadOrders();
+  } catch { /* cancelled */ }
 }
 
 async function confirmFinish(row: OrderRecord) {

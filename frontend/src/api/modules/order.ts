@@ -16,6 +16,10 @@ export function getOrderDetail(orderNo: number | string) {
   return get<OrderDetail>(`/order/${orderNo}`);
 }
 
+export function confirmOrder(orderNo: number | string) {
+  return put<void>(`/order/confirm/${orderNo}`);
+}
+
 export function finishOrder(orderNo: number | string) {
   return put<void>(`/order/finish/${orderNo}`);
 }

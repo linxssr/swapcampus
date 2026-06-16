@@ -1,7 +1,7 @@
 package com.campus.search.service;
 
 import com.campus.model.entity.Category;
-import com.campus.model.entity.ItemCollect;
+import com.campus.model.vo.CollectVO;
 import com.campus.model.vo.ItemVO;
 
 import java.math.BigDecimal;
@@ -20,7 +20,7 @@ public interface SearchService {
 
     void cancelCollect(Long id, Long userId);
 
-    List<ItemCollect> listMyCollects(Long userId);
+    List<CollectVO> listMyCollects(Long userId);
 }
 
 

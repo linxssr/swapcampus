@@ -40,6 +40,42 @@
       </div>
     </div>
 
+    <!-- 猜你喜欢 — 仅登录且有推荐结果时显示 -->
+    <div v-if="authStore.isLoggedIn && (recommendLoading || recommendItems.length > 0)" class="section">
+      <div class="section-header">
+        <h2 class="section-title recommend-title">猜你喜欢</h2>
+        <el-button type="primary" text @click="router.push('/items')">
+          查看更多
+          <el-icon><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+
+      <div v-if="recommendLoading" class="loading-grid">
+        <el-skeleton v-for="i in 8" :key="i" animated class="skeleton-card" />
+      </div>
+      <div v-else class="item-grid">
+        <div
+          v-for="item in recommendItems"
+          :key="item.itemId"
+          class="item-card"
+          @click="router.push(`/items/${item.itemId}`)"
+        >
+          <div class="item-cover">
+            <el-image :src="toProxiedUrl(item.coverUrl)" fit="cover" class="cover-img">
+              <template #error><div class="img-error">暂无图片</div></template>
+            </el-image>
+          </div>
+          <div class="item-info">
+            <div class="item-title">{{ item.title }}</div>
+            <div class="item-bottom">
+              <span class="item-price">¥{{ item.price }}</span>
+              <span class="item-quality">{{ item.qualityDesc }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="section">
       <div class="section-header">
         <h2 class="section-title">最新发布</h2>
@@ -63,7 +99,9 @@
           @click="router.push(`/items/${item.itemId}`)"
         >
           <div class="item-cover">
-            <el-image :src="item.coverUrl" fit="cover" class="cover-img" />
+            <el-image :src="toProxiedUrl(item.coverUrl)" fit="cover" class="cover-img">
+              <template #error><div class="img-error">暂无图片</div></template>
+            </el-image>
             <div v-if="item.auditStatus !== 1" class="audit-overlay">
               <el-tag :type="item.auditStatus === 0 ? 'warning' : 'danger'" size="small">
                 {{ item.auditStatusDesc }}
@@ -89,14 +127,19 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { getCategoryList } from '@/api/modules/category';
-import { filterItems } from '@/api/modules/item';
+import { filterItems, getRecommendItems } from '@/api/modules/item';
+import { useAuthStore } from '@/stores/modules/auth';
+import { toProxiedUrl } from '@/utils/upload';
 import type { CategoryVO, ItemVO } from '@/types/item';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const searchKey = ref('');
 const itemsLoading = ref(false);
 const categoryList = ref<CategoryVO[]>([]);
 const recentItems = ref<ItemVO[]>([]);
+const recommendItems = ref<ItemVO[]>([]);
+const recommendLoading = ref(false);
 
 function categoryEmoji(name: string): string {
   const map: Record<string, string> = {
@@ -145,6 +188,19 @@ async function loadRecentItems() {
   }
 }
 
+async function loadRecommendItems() {
+  if (!authStore.isLoggedIn) return;
+  recommendLoading.value = true;
+  try {
+    const res = await getRecommendItems(8);
+    recommendItems.value = res.data ?? [];
+  } catch {
+    recommendItems.value = [];
+  } finally {
+    recommendLoading.value = false;
+  }
+}
+
 function handleSearch() {
   if (!searchKey.value.trim()) {
     ElMessage.warning('请输入搜索关键词');
@@ -155,7 +211,7 @@ function handleSearch() {
 
 onMounted(async () => {
   await loadCategories();
-  await loadRecentItems();
+  await Promise.all([loadRecentItems(), loadRecommendItems()]);
 });
 </script>
 
@@ -253,6 +309,12 @@ onMounted(async () => {
   content: '▶';
   font-size: 14px;
   color: var(--color-primary-dk);
+}
+
+.recommend-title::before {
+  content: '✦';
+  font-size: 14px;
+  color: var(--color-secondary);
 }
 
 .category-grid {
@@ -370,5 +432,17 @@ onMounted(async () => {
   border: var(--border-pixel);
   border-radius: var(--radius-pixel);
   box-shadow: var(--shadow-hard);
+}
+
+.img-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  background: #f0ede6;
 }
 </style>

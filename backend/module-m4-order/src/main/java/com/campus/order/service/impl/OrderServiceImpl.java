@@ -92,6 +92,25 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    public void confirmOrder(String orderNo, Long currentUserId) {
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if (order == null) {
+            throw new BusinessException(404, "订单不存在");
+        }
+
+        if (!order.getSellerId().equals(currentUserId)) {
+            throw new BusinessException(403, "只有卖家可以确认订单");
+        }
+
+        if (order.getOrderStatus() != 1) {
+            throw new BusinessException(400, "当前订单状态无法确认");
+        }
+
+        orderMapper.updateOrderStatus(orderNo, 2);
+    }
+
+    @Override
+    @Transactional
     public void cancelOrder(String orderNo, Long currentUserId) {
         Order order = orderMapper.selectByOrderNo(orderNo);
         if (order == null) {
@@ -102,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(403, "无权操作此订单");
         }
 
-        if (order.getOrderStatus() != 1) {
+        if (order.getOrderStatus() != 1 && order.getOrderStatus() != 2) {
             throw new BusinessException(400, "当前订单状态无法取消");
         }
 
@@ -127,7 +146,7 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(403, "只有买家可以确认收货");
         }
 
-        if (order.getOrderStatus() != 1) {
+        if (order.getOrderStatus() != 2) {
             throw new BusinessException(400, "当前订单状态无法确认收货");
         }
 

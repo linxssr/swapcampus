@@ -21,4 +21,8 @@ public interface ItemService {
     ItemDetailVO getDetail(Long itemId, Long currentUserId);
 
     List<ItemVO> getMyItems(Long userId);
+
+    void recordBrowse(Long userId, Long itemId);
+
+    List<ItemVO> getRecommendItems(Long userId, int limit);
 }

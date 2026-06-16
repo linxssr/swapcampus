@@ -33,6 +33,12 @@ export const userRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true },
       },
       {
+        path: 'credit',
+        name: 'CreditCenter',
+        component: () => import('@/views/user/profile/CreditCenterView.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
         path: 'user/:userId',
         name: 'UserHome',
         component: () => import('@/views/user/profile/UserHomeView.vue'),

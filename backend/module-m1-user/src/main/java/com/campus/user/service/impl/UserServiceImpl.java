@@ -1,6 +1,7 @@
 package com.campus.user.service.impl;
 
 import com.campus.mapper.OrderMapper;
+import com.campus.mapper.TaskMapper;
 import com.campus.mapper.UserMapper;
 import com.campus.model.entity.User;
 import com.campus.user.service.UserService;
@@ -20,12 +21,13 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    
+
     @Autowired
     private OrderMapper orderMapper;
 
+    @Autowired
+    private TaskMapper taskMapper;
 
-    // 构造方法注入
     public UserServiceImpl(UserMapper userMapper) {
         this.userMapper = userMapper;
     }
@@ -216,42 +218,41 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> result = new HashMap<>();
         LocalDate today = LocalDate.now();
 
-        // 检查今天是否已签到
         int existCount = userMapper.checkSignToday(userId, today);
         if (existCount > 0) {
             throw new RuntimeException("今日已签到");
         }
 
-        // 获取上次签到日期
         LocalDate lastSignDate = userMapper.getLastSignDate(userId);
 
-        // 计算连续签到天数
         int continuousDays = 1;
         if (lastSignDate != null && lastSignDate.equals(today.minusDays(1))) {
-            // 昨天签到了，连续天数+1
             Integer lastContinuous = userMapper.getLastContinuousDays(userId);
             continuousDays = (lastContinuous != null ? lastContinuous : 0) + 1;
         }
 
-        // 计算增加分数
         int addScore = 1;
         if (continuousDays == 7) {
-            addScore = 5;  // 连续7天额外奖励
+            addScore = 3;
+        } else if (continuousDays >= 30) {
+            addScore = 5;
         }
 
-        // 插入签到记录
         userMapper.insertSignRecord(userId, today, continuousDays);
-
-        // 更新用户信用分
         userMapper.updateCreditScore(userId, addScore);
 
-        // 获取最新信用分
+        // 触发签到任务
+        triggerTask(userId, "DAILY_SIGN");
+        // 连续签到成就
+        if (continuousDays >= 7) triggerTask(userId, "ACH_SIGN_7");
+        int totalDays = taskMapper.countTotalSignDays(userId);
+        if (totalDays >= 30) triggerTask(userId, "ACH_SIGN_30");
+
         Integer newScore = userMapper.getCreditScore(userId);
 
         result.put("addScore", addScore);
         result.put("newScore", newScore);
         result.put("continuousDays", continuousDays);
-
         return result;
     }
 
@@ -259,18 +260,72 @@ public class UserServiceImpl implements UserService {
     public Map<String, Object> getSignStatus(Long userId) {
         Map<String, Object> result = new HashMap<>();
         LocalDate today = LocalDate.now();
-
-        // 今天是否已签到
         boolean signedToday = userMapper.checkSignToday(userId, today) > 0;
-
-        // 连续签到天数
         Integer continuousDays = userMapper.getLastContinuousDays(userId);
         if (continuousDays == null) continuousDays = 0;
-
+        int totalDays = taskMapper.countTotalSignDays(userId);
         result.put("signedToday", signedToday);
         result.put("continuousDays", continuousDays);
-
+        result.put("totalDays", totalDays);
         return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getDailyTasks(Long userId) {
+        return taskMapper.listDailyTasksWithStatus(userId, LocalDate.now());
+    }
+
+    @Override
+    public List<Map<String, Object>> getAchievements(Long userId) {
+        return taskMapper.listAchievementsWithStatus(userId);
+    }
+
+    @Override
+    public Map<String, Object> claimTaskReward(Long userId, String taskCode, LocalDate taskDate) {
+        if (taskDate == null) taskDate = LocalDate.now();
+
+        Integer taskType = taskMapper.getTaskType(taskCode);
+        if (taskType == null) throw new RuntimeException("任务不存在");
+
+        // 成就任务用最早完成日期
+        LocalDate claimDate = taskDate;
+        if (taskType == 2) {
+            claimDate = LocalDate.of(1970, 1, 1);
+        }
+
+        int updated = taskMapper.claimReward(userId, taskCode, claimDate);
+        if (updated == 0) throw new RuntimeException("任务未完成或已领取");
+
+        Integer reward = taskMapper.getTaskReward(taskCode);
+        if (reward != null && reward > 0) {
+            userMapper.updateCreditScore(userId, reward);
+        }
+
+        Integer newScore = userMapper.getCreditScore(userId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("reward", reward);
+        result.put("newScore", newScore);
+        return result;
+    }
+
+    @Override
+    public void triggerTask(Long userId, String taskCode) {
+        try {
+            Integer taskType = taskMapper.getTaskType(taskCode);
+            if (taskType == null) return;
+
+            LocalDate taskDate = taskType == 2 ? LocalDate.of(1970, 1, 1) : LocalDate.now();
+
+            if (taskType == 1) {
+                // 每日任务：今天未完成才标记
+                if (taskMapper.checkTaskDoneToday(userId, taskCode, LocalDate.now()) > 0) return;
+            } else {
+                // 成就：已完成则跳过
+                if (taskMapper.checkAchievementDone(userId, taskCode) > 0) return;
+            }
+            taskMapper.markTaskComplete(userId, taskCode, taskDate);
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

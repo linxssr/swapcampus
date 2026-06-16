@@ -78,6 +78,22 @@ public class ItemController {
         return Result.success(items);
     }
 
+    @PostMapping("/browse/{itemId}")
+    public Result<Void> recordBrowse(HttpServletRequest request,
+                                     @PathVariable("itemId") Long itemId) {
+        Long userId = requireLogin(request);
+        itemService.recordBrowse(userId, itemId);
+        return Result.success();
+    }
+
+    @GetMapping("/recommend")
+    public Result<List<ItemVO>> recommend(HttpServletRequest request,
+                                          @RequestParam(value = "limit", defaultValue = "8") int limit) {
+        Long userId = requireLogin(request);
+        List<ItemVO> items = itemService.getRecommendItems(userId, limit);
+        return Result.success(items);
+    }
+
     private Long requireLogin(HttpServletRequest request) {
         Long userId = getUserIdOrNull(request);
         if (userId == null) {

@@ -41,3 +41,11 @@ export function filterItems(params: {
 }) {
   return get<ItemVO[]>('/item/filter', { params });
 }
+
+export function recordBrowse(itemId: number | string) {
+  return post<void>(`/item/browse/${itemId}`);
+}
+
+export function getRecommendItems(limit = 8) {
+  return get<ItemVO[]>('/item/recommend', { params: { limit } });
+}

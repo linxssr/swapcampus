@@ -14,6 +14,8 @@ public interface OrderService {
 
     List<Map<String, Object>> getMyOrders(Long userId, String type);
 
+    void confirmOrder(String orderNo, Long currentUserId);
+
     void cancelOrder(String orderNo, Long currentUserId);
 
     void finishOrder(String orderNo, Long currentUserId);

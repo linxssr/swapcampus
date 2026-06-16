@@ -7,6 +7,7 @@ import com.campus.mapper.ItemMapper;
 import com.campus.model.entity.Category;
 import com.campus.model.entity.Item;
 import com.campus.model.entity.ItemCollect;
+import com.campus.model.vo.CollectVO;
 import com.campus.model.vo.ItemVO;
 import com.campus.search.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,8 +79,27 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<ItemCollect> listMyCollects(Long userId) {
-        return itemCollectMapper.listByUserId(userId);
+    public List<CollectVO> listMyCollects(Long userId) {
+        List<ItemCollect> collects = itemCollectMapper.listByUserId(userId);
+        return collects.stream().map(ic -> {
+            CollectVO vo = new CollectVO();
+            vo.setCollectId(ic.getCollectId());
+            vo.setUserId(ic.getUserId());
+            vo.setItemId(ic.getItemId());
+            vo.setCreateTime(ic.getCreateTime());
+            Item item = itemMapper.getById(ic.getItemId());
+            if (item != null) {
+                ItemVO itemVO = ItemVO.fromEntity(item);
+                if (item.getCategoryId() != null) {
+                    Category category = categoryMapper.selectById(item.getCategoryId());
+                    if (category != null) {
+                        itemVO.setCategoryName(category.getCategoryName());
+                    }
+                }
+                vo.setItem(itemVO);
+            }
+            return vo;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }
 

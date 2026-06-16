@@ -25,7 +25,7 @@ swapcampus:
     expire-seconds: ${JWT_EXPIRE_SECONDS:86400}
     issuer: ${JWT_ISSUER:swapcampus}
   minio:
-    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    endpoint: ${MINIO_ENDPOINT:http://121.41.92.121:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
     bucket: ${MINIO_BUCKET:swapcampus}

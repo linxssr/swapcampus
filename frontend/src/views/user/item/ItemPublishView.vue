@@ -381,6 +381,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-items: stretch;
 }
 
 .submit-btn {

@@ -13,7 +13,13 @@ export function toProxiedUrl(url: string | null | undefined): string {
   if (url.startsWith('/')) return url;
   try {
     const parsed = new URL(url);
-    // 将绝对地址的 pathname 部分拼上 /minio 前缀
+    // 只代理 MinIO 地址（localhost:9000 或配置的 MinIO endpoint）
+    // 外部图床（picsum.photos 等）直接原样返回
+    const isMinioUrl =
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '127.0.0.1' ||
+      parsed.port === '9000';
+    if (!isMinioUrl) return url;
     return '/minio' + parsed.pathname;
   } catch {
     return url;

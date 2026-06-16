@@ -6,6 +6,8 @@ import com.campus.user.dto.*;
 import com.campus.user.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -616,5 +618,82 @@ public class UserController {
         return result;
     }
 
+    /**
+     * 获取每日任务列表（含完成/领取状态）
+     * GET /api/v1/user/tasks/daily
+     */
+    @GetMapping("/tasks/daily")
+    public Map<String, Object> getDailyTasks(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        try {
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", userService.getDailyTasks(userId));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
 
+    /**
+     * 获取成就列表（含完成/领取状态）
+     * GET /api/v1/user/tasks/achievements
+     */
+    @GetMapping("/tasks/achievements")
+    public Map<String, Object> getAchievements(@RequestHeader("Authorization") String token) {
+        Map<String, Object> result = new HashMap<>();
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        try {
+            result.put("code", 200);
+            result.put("message", "获取成功");
+            result.put("data", userService.getAchievements(userId));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 领取任务奖励
+     * POST /api/v1/user/tasks/claim
+     * Body: { "taskCode": "DAILY_SIGN", "taskDate": "2024-01-01" }
+     */
+    @PostMapping("/tasks/claim")
+    public Map<String, Object> claimTaskReward(
+            @RequestHeader("Authorization") String token,
+            @RequestBody Map<String, String> body) {
+        Map<String, Object> result = new HashMap<>();
+        if (!jwtUtil.validateToken(token)) {
+            result.put("code", 401);
+            result.put("message", "Token无效或已过期");
+            return result;
+        }
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        String taskCode = body.get("taskCode");
+        String dateStr = body.get("taskDate");
+        LocalDate taskDate = dateStr != null ? LocalDate.parse(dateStr) : LocalDate.now();
+        try {
+            Map<String, Object> claimResult = userService.claimTaskReward(userId, taskCode, taskDate);
+            result.put("code", 200);
+            result.put("message", "领取成功");
+            result.put("data", claimResult);
+        } catch (Exception e) {
+            result.put("code", 400);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
 }

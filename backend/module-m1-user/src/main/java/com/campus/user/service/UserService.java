@@ -3,6 +3,7 @@ package com.campus.user.service;
 import com.campus.model.entity.User;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,18 @@ public interface UserService {
 
     // 获取签到状态
     Map<String, Object> getSignStatus(Long userId);
+
+    // 获取每日任务列表（含完成状态）
+    List<Map<String, Object>> getDailyTasks(Long userId);
+
+    // 获取成就列表（含完成状态）
+    List<Map<String, Object>> getAchievements(Long userId);
+
+    // 领取任务奖励
+    Map<String, Object> claimTaskReward(Long userId, String taskCode, LocalDate taskDate);
+
+    // 触发任务完成（由其他模块调用）
+    void triggerTask(Long userId, String taskCode);
 
     // 根据学号获取真实姓名
     String getRealNameByStudentId(String studentId);

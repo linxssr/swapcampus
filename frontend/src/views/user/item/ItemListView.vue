@@ -123,7 +123,9 @@
             @click="router.push(`/items/${item.itemId}`)"
           >
             <div class="item-cover">
-              <el-image :src="item.coverUrl" fit="cover" class="cover-img" />
+              <el-image :src="toProxiedUrl(item.coverUrl)" fit="cover" class="cover-img">
+                <template #error><div class="img-error">暂无图片</div></template>
+              </el-image>
               <div class="item-price-tag">¥{{ item.price }}</div>
             </div>
             <div class="item-info">
@@ -163,7 +165,8 @@ import { useRoute, useRouter } from 'vue-router';
 import PageHeader from '@/components/common/PageHeader.vue';
 import AppPagination from '@/components/pagination/AppPagination.vue';
 import { getCategoryList } from '@/api/modules/category';
-import { getItemsByCategory, searchItems, filterItems } from '@/api/modules/item';
+import { searchItems, filterItems } from '@/api/modules/item';
+import { toProxiedUrl } from '@/utils/upload';
 import { QUALITY_MAP, type ItemVO, type CategoryVO } from '@/types/item';
 
 const route = useRoute();
@@ -200,6 +203,14 @@ watch(sortBy, () => {
   items.value = sortItems(items.value);
 });
 
+watch(
+  () => [filters.minPrice, filters.maxPrice, filters.quality],
+  () => {
+    currentPage.value = 1;
+    loadItems();
+  },
+);
+
 async function loadCategories() {
   try {
     const res = await getCategoryList();
@@ -217,21 +228,13 @@ async function loadItems() {
     let res;
     if (searchKey.value) {
       res = await searchItems(searchKey.value);
-    } else if (
-      filters.minPrice !== undefined ||
-      filters.maxPrice !== undefined ||
-      filters.quality !== undefined
-    ) {
+    } else {
       res = await filterItems({
         categoryId: activeCategoryId.value ?? undefined,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         quality: filters.quality,
       });
-    } else if (activeCategoryId.value) {
-      res = await getItemsByCategory(activeCategoryId.value);
-    } else {
-      res = await filterItems({});
     }
     items.value = sortItems(res.data ?? []);
     totalCount.value = items.value.length;
@@ -460,6 +463,18 @@ onMounted(async () => {
 }
 
 .cover-img { width: 100%; height: 100%; display: block; }
+
+.img-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  background: #f0ede6;
+}
 
 .item-price-tag {
   position: absolute;

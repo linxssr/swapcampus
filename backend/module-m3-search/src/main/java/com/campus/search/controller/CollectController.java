@@ -3,7 +3,7 @@ package com.campus.search.controller;
 import com.campus.common.interceptor.AuthAnnotation;
 import com.campus.common.result.Result;
 import com.campus.common.utils.JwtUtil;
-import com.campus.model.entity.ItemCollect;
+import com.campus.model.vo.CollectVO;
 import com.campus.search.service.SearchService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +41,9 @@ public class CollectController {
 
     @GetMapping("/my")
     @AuthAnnotation
-    public Result<List<ItemCollect>> listMyCollects(HttpServletRequest request) {
+    public Result<List<CollectVO>> listMyCollects(HttpServletRequest request) {
         Long userId = resolveUserId(request);
-        List<ItemCollect> collects = searchService.listMyCollects(userId);
+        List<CollectVO> collects = searchService.listMyCollects(userId);
         return Result.success(collects);
     }
 

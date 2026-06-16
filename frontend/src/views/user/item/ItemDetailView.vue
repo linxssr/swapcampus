@@ -14,7 +14,9 @@
               class="main-img"
               :preview-src-list="item.imageUrls || []"
               :initial-index="activeIndex"
-            />
+            >
+              <template #error><div class="img-error">暂无图片</div></template>
+            </el-image>
           </div>
           <div v-if="item.imageUrls && item.imageUrls.length > 1" class="thumbnail-list">
             <div
@@ -24,7 +26,7 @@
               :class="{ active: idx === activeIndex }"
               @click="activeIndex = idx"
             >
-              <el-image :src="url" fit="cover" />
+              <el-image :src="toProxiedUrl(url)" fit="cover" />
             </div>
           </div>
         </div>
@@ -139,7 +141,7 @@
     <el-dialog v-model="showOrderDialog" title="确认订单" width="480px">
       <div class="order-confirm">
         <div class="order-item-info">
-          <el-image :src="item?.coverUrl" fit="cover" class="order-item-img" />
+          <el-image :src="toProxiedUrl(item?.coverUrl)" fit="cover" class="order-item-img" />
           <div class="order-item-detail">
             <div class="order-item-title">{{ item?.title }}</div>
             <div class="order-item-price">¥{{ item?.price }}</div>
@@ -178,8 +180,12 @@ import dayjs from 'dayjs';
 import { addCollect, cancelCollectByItemId } from '@/api/modules/collect';
 import { getItemDetail, deleteItem } from '@/api/modules/item';
 import { createOrder, getItemComments } from '@/api/modules/order';
+import { useHistory } from '@/composables/useHistory';
+import { toProxiedUrl } from '@/utils/upload';
 import type { ItemDetailVO } from '@/types/item';
 import type { CommentRecord } from '@/types/order';
+
+const { track } = useHistory();
 
 const route = useRoute();
 const router = useRouter();
@@ -202,8 +208,8 @@ const comments = ref<CommentRecord[]>([]);
 const commentsLoading = ref(false);
 
 const activeImage = computed(() => {
-  if (!item.value?.imageUrls?.length) return item.value?.coverUrl || '';
-  return item.value.imageUrls[activeIndex.value] || item.value.coverUrl;
+  if (!item.value?.imageUrls?.length) return toProxiedUrl(item.value?.coverUrl);
+  return toProxiedUrl(item.value.imageUrls[activeIndex.value] || item.value.coverUrl);
 });
 
 function formatTime(time: string) {
@@ -225,6 +231,10 @@ async function loadItem() {
     const res = await getItemDetail(itemId.value);
     item.value = res.data;
     isCollected.value = false;
+    // 记录浏览历史
+    if (res.data) {
+      track(res.data.itemId, res.data.categoryId);
+    }
     await loadComments();
   } catch {
     item.value = null;
@@ -372,6 +382,18 @@ onMounted(() => {
 }
 
 .main-img { width: 100%; height: 100%; }
+
+.img-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-sub);
+  background: #f0ede6;
+}
 
 .thumbnail-list {
   display: flex;
