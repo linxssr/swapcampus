@@ -1,0 +1,149 @@
+name: Release CD
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'          # e.g. v1.0.0 触发正式发布
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '制品版本标签（如 v1.0.0）'
+        required: true
+        default: 'v0.0.0-dev'
+
+env:
+  RELEASE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || inputs.version }}
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: 后端构建 → 上传 JAR 制品
+  # ─────────────────────────────────────────────
+  build-backend:
+    name: Build Backend JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build fat JAR (skip tests in release build)
+        working-directory: backend
+        run: mvn -B package -DskipTests
+
+      - name: Rename artifact for clarity
+        run: |
+          cp backend/swapcampus-app/target/swapcampus-app-*.jar \
+             swapcampus-backend-${{ env.RELEASE_VERSION }}.jar
+
+      - name: Upload backend JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar-${{ env.RELEASE_VERSION }}
+          path: swapcampus-backend-${{ env.RELEASE_VERSION }}.jar
+          retention-days: 30
+
+  # ─────────────────────────────────────────────
+  # Job 2: 前端构建 → 上传 dist 压缩包制品
+  # ─────────────────────────────────────────────
+  build-frontend:
+    name: Build Frontend dist
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'http://localhost:8080' }}
+
+      - name: Archive dist
+        run: |
+          cd dist
+          zip -r ../../swapcampus-frontend-${{ env.RELEASE_VERSION }}.zip .
+
+      - name: Upload frontend zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-${{ env.RELEASE_VERSION }}
+          path: swapcampus-frontend-${{ env.RELEASE_VERSION }}.zip
+          retention-days: 30
+
+  # ─────────────────────────────────────────────
+  # Job 3: 汇总两个制品 → 创建 GitHub Release
+  # ─────────────────────────────────────────────
+  create-release:
+    name: Create GitHub Release
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    # 仅在真实 tag 推送时创建 Release；手动触发只上传制品，不建 Release
+    if: github.ref_type == 'tag'
+
+    permissions:
+      contents: write       # 允许创建 Release
+
+    steps:
+      - name: Download backend JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar-${{ env.RELEASE_VERSION }}
+
+      - name: Download frontend zip
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist-${{ env.RELEASE_VERSION }}
+
+      - name: Create GitHub Release with assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: "SwapCampus Trade ${{ env.RELEASE_VERSION }}"
+          body: |
+            ## 制品说明
+
+            | 文件 | 说明 |
+            |------|------|
+            | `swapcampus-backend-*.jar` | Spring Boot fat-JAR，可直接 `java -jar` 运行 |
+            | `swapcampus-frontend-*.zip` | Vite 构建产物，解压后部署到静态文件服务器（Nginx 等） |
+
+            ### 后端快速启动
+            ```bash
+            java -jar swapcampus-backend-${{ env.RELEASE_VERSION }}.jar \
+              --MYSQL_URL=jdbc:mysql://host:3306/swapcampus_db \
+              --MYSQL_USERNAME=xxx \
+              --MYSQL_PASSWORD=xxx \
+              --JWT_SECRET=your-secret
+            ```
+
+            ### 前端快速部署
+            ```bash
+            unzip swapcampus-frontend-${{ env.RELEASE_VERSION }}.zip -d /var/www/swapcampus
+            # Nginx 将 root 指向 /var/www/swapcampus，try_files $uri /index.html
+            ```
+          draft: false
+          prerelease: ${{ contains(env.RELEASE_VERSION, '-') }}
+          files: |
+            swapcampus-backend-${{ env.RELEASE_VERSION }}.jar
+            swapcampus-frontend-${{ env.RELEASE_VERSION }}.zip
